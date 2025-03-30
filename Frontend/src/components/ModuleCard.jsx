@@ -4,7 +4,7 @@ import { ThreeDotsVertical } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
 import '../css/card.css';
 
-const ModuleCard = ({ id, title, canDelete = false, onDelete }) => {
+const ModuleCard = ({ id, title, canDelete = false, onDelete, isStudent = false }) => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -14,7 +14,7 @@ const ModuleCard = ({ id, title, canDelete = false, onDelete }) => {
   };
 
   const onClick = () => { 
-    navigate('/module', { state: { moduleId: id, moduleTitle: title }});
+    navigate(isStudent ? '/userModule' : '/module', { state: { moduleId: id, moduleTitle: title }});
   };
 
   return (

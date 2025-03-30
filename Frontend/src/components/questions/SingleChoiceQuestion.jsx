@@ -5,14 +5,14 @@ const SingleChoiceQuestion = ({
   questionId,
   questionText,
   options,
-  onSelect
+  onSelect,
+  isReadonly = false
 }) => {
   const [selectedOption, setSelectedOption] = useState(null);
 
   const handleOptionSelect = (optionId) => {
     setSelectedOption(optionId);
-    let answer = { answer: optionId}
-    onSelect(questionId, answer);
+    onSelect(optionId);
   };
 
   return (
@@ -30,6 +30,7 @@ const SingleChoiceQuestion = ({
               key={option.id}
               action
               onClick={(e) => {
+                if (isReadonly) return;
                 e.preventDefault();
                 handleOptionSelect(option.id)
               }}
@@ -40,6 +41,7 @@ const SingleChoiceQuestion = ({
                 id={`option-${questionId}-${index}`}
                 name={`question-${questionId}`}
                 checked={selectedOption === option.id}
+                disabled={isReadonly}
                 onChange={() => {}}
                 label={option.text}
                 className="w-100"

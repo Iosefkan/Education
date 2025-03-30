@@ -4,7 +4,7 @@ import { ThreeDotsVertical } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
 import '../css/card.css';
 
-const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDelete }) => {
+const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDelete, isStudent = false }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
@@ -14,7 +14,7 @@ const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDele
   };
 
   const onClick = () => { 
-    navigate('/course', { state: { courseId: id, courseTitle: title }});
+    navigate(isStudent ? '/userCourse' : '/course', { state: { courseId: id, courseTitle: title }});
   };
 
   return (

@@ -47,6 +47,25 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             .ToListAsync();
         return Ok(result);
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetMakePracticalQuestions(long moduleId, long practId)
+    {
+        var result = await context.Questions
+            .Include(q => q.PracticalMaterialBindQuestions)
+            .Where(q => q.ModuleId == moduleId)
+            .AsNoTracking()
+            .Select(q => new
+            {
+                q.Id,
+                q.Text,
+                Type = q.QuestionTypeId,
+                Body = q.Options,
+                IsSelected = q.PracticalMaterialBindQuestions.Any(q => q.PracticalMaterialId == practId)
+            })
+            .ToListAsync();
+        return Ok(result);
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetCourses()
@@ -121,8 +140,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var curStudentsOnCourse = await context.Users
             .Include(u => u.Role)
             .Include(u => u.CourseBindUsers)
-            .Where(u => u.Role.Name == RoleConstants.Student)
-            .Where(u => u.CourseBindUsers.Any(c => c.CourseId == request.CourseId))
+            .Where(u => u.Role.Name == RoleConstants.Student && u.CourseBindUsers.Any(c => c.CourseId == request.CourseId))
             .ToListAsync();
 
         foreach (var student in curStudentsOnCourse)
@@ -151,6 +169,42 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         }).ToList();
 
         await context.CourseBindUsers.AddRangeAsync(courseBinds);
+        
+        await context.SaveChangesAsync();
+        
+        return Ok();
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdatePracticalMaterialQuestions(
+        [FromBody] UpdatePracticalQuestionsRequest request)
+    {
+        var curTestQuestions = await context.PracticalMaterialBindQuestions
+            .Where(u => u.PracticalMaterialId == request.PracticalId)
+            .ToListAsync();
+
+        foreach (var bind in curTestQuestions)
+        {
+            if (!request.QuestionIds.Contains(bind.QuestionId))
+            {
+                context.PracticalMaterialBindQuestions.Remove(bind);
+            }
+            else
+            {
+                request.QuestionIds.Remove(bind.QuestionId);
+            }
+        }
+        
+        await context.SaveChangesAsync();
+
+
+        var questBinds = request.QuestionIds.Select(questId => new PracticalMaterialBindQuestion()
+        {
+            PracticalMaterialId = request.PracticalId,
+            QuestionId = questId
+        }).ToList();
+
+        await context.PracticalMaterialBindQuestions.AddRangeAsync(questBinds);
         
         await context.SaveChangesAsync();
         

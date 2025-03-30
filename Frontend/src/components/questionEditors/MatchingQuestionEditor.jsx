@@ -42,7 +42,7 @@ const MatchingQuestionEditor = ({ onSave }) => {
     if (!questionWeight) newErrors.weight = 'Введите вес вопроса';
     let accWeight = 0;
 
-    matches.forEach((match, index) => {
+    matches.forEach((match) => {
       if (!match.left.trim()) {
         newErrors[`left-${match.id}`] = 'Заполните левую сторону соотнесения';
       }
@@ -71,8 +71,8 @@ const MatchingQuestionEditor = ({ onSave }) => {
       newErrors.general = 'Должно быть как минимум два соотнесения';
     }
 
-    if (accWeight > 1){
-      newErrors.general = 'Общий вес ответов не должен превышать 1';
+    if (accWeight !== 1){
+      newErrors.general = 'Общий вес ответов должен равняться 1';
     }
 
     setErrors(newErrors);

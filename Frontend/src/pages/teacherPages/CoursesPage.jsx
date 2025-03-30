@@ -1,11 +1,11 @@
-import Layout from "../components/Layout";
-import CourseCard from "../components/CourseCard";
-import CreateCourseModal from "../components/sidebars/CreateCourseModal";
+import Layout from "../../components/Layout";
+import CourseCard from "../../components/CourseCard";
+import CreateCourseModal from "../../components/sidebars/CreateCourseModal";
 import { useState, useEffect } from "react";
-import { deleteCourse, getCourses, createCourse } from "../services/teacher.service";
+import { deleteCourse, getCourses, createCourse } from "../../services/teacher.service";
 import { Button } from "react-bootstrap";
 
-const CoursePage = () => {
+const CoursesPage = () => {
     const [courses, setCourses] = useState([]);
     const [showModal, setShowModal] = useState(false);
 
@@ -15,7 +15,7 @@ const CoursePage = () => {
             setCourses(recCourses)
         }
         initCourses();
-    }, [setCourses])
+    }, [])
 
     const handleCreate = async (courseData) => {
         const newCourse = await createCourse(courseData.date, courseData.description, courseData.name);
@@ -60,4 +60,4 @@ const CoursePage = () => {
     );
 }
 
-export default CoursePage;
+export default CoursesPage;

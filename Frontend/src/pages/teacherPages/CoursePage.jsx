@@ -1,14 +1,14 @@
-import Layout from "../components/Layout";
-import ModuleCard from "../components/ModuleCard";
-import CreateModuleModal from "../components/sidebars/CreateModuleModal";
-import MultiSelectSearch from "../components/MultiSelectSearch";
+import Layout from "../../components/Layout";
+import ModuleCard from "../../components/ModuleCard";
+import CreateModuleModal from "../../components/sidebars/CreateModuleModal";
+import MultiSelectSearch from "../../components/MultiSelectSearch";
 import { useState, useEffect } from "react";
-import { deleteModule, getModules, createModule, getUsers, saveUsers } from "../services/teacher.service";
+import { deleteModule, getModules, createModule, getUsers, saveUsers } from "../../services/teacher.service";
 import { Button, Tab, Nav, Container, Row, Col, Alert } from "react-bootstrap";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const CoursesPage = () => {
+const CoursePage = () => {
   const [activeKey, setActiveKey] = useState('modules');
   const [modules, setModules] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -16,7 +16,6 @@ const CoursesPage = () => {
   const [saveMessage, setSaveMessage] = useState({});
   const [users, setUsers] = useState([]);
   const { state } = useLocation();
-  const navigate = useNavigate();
   const { courseId, courseTitle } = state;
 
   useEffect(() => {
@@ -130,4 +129,4 @@ const CoursesPage = () => {
   );
 };
 
-export default CoursesPage;
+export default CoursePage;

@@ -48,7 +48,6 @@ export const getUsers = async (courseId) => {
 }
 
 export const saveUsers = async (courseId, selectedUsers) => {
-    console.log(selectedUsers);
     try {
         await axios.put('api/Teacher/UpdateCourseStudents', {
             courseId,
@@ -59,7 +58,6 @@ export const saveUsers = async (courseId, selectedUsers) => {
     catch{
         return false;
     }
-
 }
 
 
@@ -101,4 +99,22 @@ export const createQuestion = async (moduleId, type, body, answer, weight, text)
     return response.data;
 }
 
+export const getPractAllQuestion = async (moduleId, practId) => {
+    console.log(moduleId);
+    console.log(practId);
+    const response = await axios.get(`api/Teacher/GetMakePracticalQuestions?moduleId=${moduleId}&practId=${practId}`);
+    return response.data;
+}
 
+export const updatePractQuestions = async (practicalId, questionIds) => {
+    try {
+        await axios.put('api/Teacher/UpdatePracticalMaterialQuestions', {
+            practicalId,
+            questionIds
+        });
+        return true;
+    }
+    catch{
+        return false;
+    }
+}

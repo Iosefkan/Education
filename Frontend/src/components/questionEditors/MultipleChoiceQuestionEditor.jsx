@@ -56,10 +56,10 @@ const MultipleChoiceQuestionEditor = ({ question, onSave }) => {
     const newErrors = {};
     if (!questionWeight) newErrors.weight = 'Введите вес вопроса';
     let accWeight = answers.reduce((acc, ans) => acc + Number(ans.weight), 0);
-    if (accWeight > 1) newErrors.accWeight = 'Общий вес ответов не должен превышать 1';
+    if (accWeight !== 1) newErrors.accWeight = 'Общий вес ответов должен равняться 1';
     if (!questionText.trim()) newErrors.question = 'Заполните текст вопроса';
     if (answers.some(a => !a.text.trim())) newErrors.answers = 'Заполните текст всех ответов';
-    if (answers.some(a => a.correct && !a.weight)) newErrors.answers = 'Заполните текст всех ответов';
+    if (answers.some(a => !a.weight)) newErrors.answers = 'Заполните текст всех ответов';
     if (!answers.some(a => a.correct)) newErrors.correct = 'Пометьте как минимум один ответ как верный';
     if (answers.length < 2) newErrors.answersCount = 'Должно быть как минимум два ответа';
     
@@ -159,7 +159,6 @@ const MultipleChoiceQuestionEditor = ({ question, onSave }) => {
 
               <Form.Control
                   type="number"
-                  disabled={!answer.correct}
                   style={{maxWidth: '100px'}}
                   value={answer.weight}
                   onChange={(e) => {
@@ -167,7 +166,7 @@ const MultipleChoiceQuestionEditor = ({ question, onSave }) => {
                     handleAnswerChange(answer.id, e.target.value, true);
                   }}
                   placeholder="Вес"
-                  isInvalid={!!errors.answers && !answer.wieght && answer.correct}
+                  isInvalid={!!errors.answers && !answer.wieght}
                 />
               
               <Button

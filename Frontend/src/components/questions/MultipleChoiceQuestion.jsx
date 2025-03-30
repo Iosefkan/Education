@@ -5,7 +5,8 @@ const MultipleChoiceQuestion = ({
   questionId,
   questionText,
   options,
-  onSelect
+  onSelect,
+  isReadonly = false
 }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
   const handleOptionSelect = (optionId) => {
@@ -14,7 +15,7 @@ const MultipleChoiceQuestion = ({
       : [...selectedOptions, optionId];
     
     setSelectedOptions(newSelection);
-    onSelect(questionId, newSelection);
+    onSelect(newSelection);
   };
 
   return (
@@ -32,6 +33,7 @@ const MultipleChoiceQuestion = ({
               key={option.id}
               action
               onClick={(e) => {
+                if (isReadonly) return;
                 e.preventDefault();
                 handleOptionSelect(option.id)
               }}
@@ -40,6 +42,7 @@ const MultipleChoiceQuestion = ({
             >
               <Form.Check 
                 type="checkbox"
+                disabled={isReadonly}
                 id={`option-${questionId}-${index}`}
                 checked={selectedOptions.includes(option.id)}
                 onChange={() => {}}

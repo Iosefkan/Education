@@ -2,9 +2,8 @@ using System.Runtime.InteropServices;
 
 namespace Education.Models.Questions;
 
-public class SingleChoiceModel
+public class SingleChoiceAnswerModel
 {
-    public string Text { get; set; }
     public List<SingleChoiceOption> Answers { get; set; }
     public string CorrectAnswerId { get; set; }
 }

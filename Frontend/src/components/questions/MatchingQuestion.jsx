@@ -6,7 +6,8 @@ const MatchingQuestion = ({
   questionText,
   leftItems,
   rightItems,
-  onMatch
+  onMatch,
+  isReadonly = false
 }) => {
   const [matches, setMatches] = useState({});
   const [draggedItem, setDraggedItem] = useState(null);
@@ -42,7 +43,7 @@ const MatchingQuestion = ({
 
     setMatches(newMatches);
     let answer = Object.keys(newMatches).map((value) => { return { left: value, right: newMatches[value] }})
-    onMatch(questionId, answer);
+    onMatch(answer);
     setDraggedItem(null);
   };
 
@@ -66,7 +67,7 @@ const MatchingQuestion = ({
               <div
                 key={leftItem.id}
                 className="match-item mb-2 p-3 border rounded"
-                draggable
+                draggable={!isReadonly}
                 onDragStart={() => handleDragStart(leftItem.id, true)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -80,9 +81,9 @@ const MatchingQuestion = ({
               >
                 <div className="d-flex justify-content-between align-items-center">
                   <span>{leftItem.text}</span>
-                  <Badge bg="light" text="dark" className="ms-2">
+                  {!isReadonly && (<Badge bg="light" text="dark" className="ms-2">
                     {getMatchedText(leftItem.id)}
-                  </Badge>
+                  </Badge>)}
                 </div>
               </div>
             ))}
@@ -90,9 +91,9 @@ const MatchingQuestion = ({
 
           <Col md={2} className="text-center d-flex align-items-center">
             <div className="w-100">
-              <Button variant="light" disabled className="my-2">
+              {!isReadonly && (<Button variant="light" disabled className="my-2">
                 Соотнести →
-              </Button>
+              </Button>)}
             </div>
           </Col>
 
@@ -117,7 +118,7 @@ const MatchingQuestion = ({
           </Col>
         </Row>
 
-        <div className="text-center mt-4">
+        {!isReadonly && (<div className="text-center mt-4">
           <Button
             variant="outline-danger"
             onClick={() => {
@@ -127,7 +128,7 @@ const MatchingQuestion = ({
           >
             Сбросить ответы
           </Button>
-        </div>
+        </div>)}
       </Card.Body>
     </Card>
   );

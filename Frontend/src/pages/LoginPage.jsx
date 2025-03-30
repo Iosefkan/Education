@@ -28,6 +28,7 @@ const LoginPage = () => {
           navigate('/users');
           break;
         case 'Студент':
+          navigate('/userCourses');
           break;
         case 'Преподаватель':
           navigate('/courses');

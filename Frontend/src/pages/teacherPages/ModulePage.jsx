@@ -1,19 +1,19 @@
-import Layout from "../components/Layout";
-import TestCard from "../components/TestCard";
-import SingleChoiceQuestion from "../components/questions/SingleChoiceQuestion";
-import MultipleChoiceQuestion from "../components/questions/MultipleChoiceQuestion";
-import MatchingQuestion from "../components/questions/MatchingQuestion";
-import ShortAnswerQuestion from "../components/questions/ShortAnswerQuestion";
+import Layout from "../../components/Layout";
+import TestCard from "../../components/TestCard";
+import SingleChoiceQuestion from "../../components/questions/SingleChoiceQuestion";
+import MultipleChoiceQuestion from "../../components/questions/MultipleChoiceQuestion";
+import MatchingQuestion from "../../components/questions/MatchingQuestion";
+import ShortAnswerQuestion from "../../components/questions/ShortAnswerQuestion";
 
-import SingleChoiceQuestionEditor from "../components/questionEditors/SignleChoiceQuestionEditor";
-import MultipleChoiceQuestionEditor from "../components/questionEditors/MultipleChoiceQuestionEditor";
-import MatchingQuestionEditor from "../components/questionEditors/MatchingQuestionEditor";
-import ShortAnswerQuestionEditor from "../components/questionEditors/ShortAnswerQuestionEditor";
+import SingleChoiceQuestionEditor from "../../components/questionEditors/SignleChoiceQuestionEditor";
+import MultipleChoiceQuestionEditor from "../../components/questionEditors/MultipleChoiceQuestionEditor";
+import MatchingQuestionEditor from "../../components/questionEditors/MatchingQuestionEditor";
+import ShortAnswerQuestionEditor from "../../components/questionEditors/ShortAnswerQuestionEditor";
 
-import transformQuestionEditorToQuestion from "../services/questionTransform";
+import transformQuestionEditorToQuestion from "../../services/questionTransform";
 
-import CreateTestModal from "../components/sidebars/CreateTestModal";
-import { deleteTest, getTests, createTest, createQuestion, getQuestions } from "../services/teacher.service";
+import CreateTestModal from "../../components/sidebars/CreateTestModal";
+import { deleteTest, getTests, createTest, createQuestion, getQuestions } from "../../services/teacher.service";
 import { useState, useEffect } from "react";
 import { Button, Tab, Nav, Container, Row, Col, ListGroup, Form } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
@@ -118,6 +118,7 @@ const ModulePage = () => {
                       <TestCard
                         key={test.id}
                         id={test.id}
+                        moduleId={moduleId}
                         title={test.name}
                         canDelete={true}
                         onDelete={() => handleDelete(test)}
@@ -177,6 +178,7 @@ const ModulePage = () => {
                                 questionId={question.id}
                                 questionText={question.text}
                                 options={question.body.options}
+                                isReadonly={true}
                                 onSelect={(id, selectedId) => {
                                     answers[question.id] = { answer: selectedId };
                                     setAnswers(answers);
@@ -188,6 +190,7 @@ const ModulePage = () => {
                                 questionId={question.id}
                                 questionText={question.text}
                                 options={question.body.options}
+                                isReadonly={true}
                                 onSelect={(id, selectedIds) => {
                                     answers[question.id] = { answer: selectedIds };
                                     setAnswers(answers);
@@ -200,6 +203,7 @@ const ModulePage = () => {
                                 questionText={question.text}
                                 leftItems={question.body.leftItems}
                                 rightItems={question.body.rightItems}
+                                isReadonly={true}
                                 onMatch={(id, matches) => {
                                     answers[question.id] = matches
                                     setAnswers(answers);
@@ -210,7 +214,7 @@ const ModulePage = () => {
                                 key={question.id}
                                 questionId={question.id}
                                 questionText={question.text}
-                                isReadonly={false}
+                                isReadonly={true}
                                 onSave={(answer) => {
                                     answers[question.id] = { answer };
                                     setAnswers(answers);

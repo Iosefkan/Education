@@ -32,11 +32,11 @@ const ShortAnswerQuestion = ({
               aria-describedby={`helpText-${questionId}`}
             />
           </Form.Group>
-          <div className="d-flex justify-content-end mt-4 gap-2">
+          {!isReadonly && (<div className="d-flex justify-content-end mt-4 gap-2">
             <Button variant="primary" onClick={() => onSave(answer)}>
               Сохранить вопрос
             </Button>
-          </div>
+          </div>)}
         </Form>
       </Card.Body>
     </Card>
