@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Card, Dropdown, Modal, Button } from 'react-bootstrap';
 import { ThreeDotsVertical } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
-import '../css/card.css';
+import '../../css/card.css';
 
-const ModuleCard = ({ id, title, canDelete = false, onDelete, isStudent = false }) => {
+const TestCard = ({ id, title, moduleId, canDelete = false, onDelete, isStudent = false }) => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -14,7 +14,7 @@ const ModuleCard = ({ id, title, canDelete = false, onDelete, isStudent = false 
   };
 
   const onClick = () => { 
-    navigate(isStudent ? '/userModule' : '/module', { state: { moduleId: id, moduleTitle: title }});
+    navigate(isStudent ? '/test' : '/makeTest', { state: { moduleId, practId: id, practTitle: title }});
   };
 
   return (
@@ -54,7 +54,7 @@ const ModuleCard = ({ id, title, canDelete = false, onDelete, isStudent = false 
           <Modal.Title>Подтверждение удаления</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Вы уверены, что хотите удалить модуль "{title}"?
+          Вы уверены, что хотите удалить тест "{title}"?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
@@ -69,4 +69,4 @@ const ModuleCard = ({ id, title, canDelete = false, onDelete, isStudent = false 
   );
 };
 
-export default ModuleCard;
+export default TestCard;

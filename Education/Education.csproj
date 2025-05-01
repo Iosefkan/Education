@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,9 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Files\Case\" />
-      <Folder Include="Files\Theory\" />
-      <Folder Include="Managers\" />
+      <Folder Include="Files\" />
     </ItemGroup>
 
 </Project>

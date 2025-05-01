@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import CourseCard from "../../components/CourseCard";
+import CourseCard from "../../components/cards/CourseCard";
 import { useState, useEffect } from "react";
 import { getCourses } from "../../services/student.service";
 

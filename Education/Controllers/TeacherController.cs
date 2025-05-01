@@ -1,6 +1,8 @@
 using Education.Consts;
 using Education.DAL;
 using Education.DAL.Models;
+using Education.Extensions;
+using Education.Helpers;
 using Education.Models.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +46,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
                 Type = q.QuestionTypeId,
                 Body = q.Options
             })
+            .OrderByDescending(q => q.Id)
             .ToListAsync();
         return Ok(result);
     }
@@ -97,7 +100,51 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             .ToListAsync();
         return Ok(result);
     }
-    
+
+    [HttpGet]
+    public async Task<IActionResult> GetTheories(long moduleId)
+    {
+        var result = await context.TheoreticalMaterials
+            .AsNoTracking()
+            .Where(m => m.ModuleId == moduleId)
+            .Select(m => new { m.Id, m.Name })
+            .ToListAsync();
+        return Ok(result);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTheoryText(long theoryId)
+    {
+        var theory = await context.TheoreticalMaterials
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == theoryId);
+        if (theory is null) return BadRequest();
+
+        return Ok(new { theory.Text});
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTheoryDocs(long theoryId)
+    {
+        var result = await context.TheoreticalMaterialFiles
+        .AsNoTracking()
+            .Where(m => m.TheoreticalMaterialId == theoryId)
+            .Select(m => new { m.Id, m.Path, m.Description, Name = m.Path.GetPublicFileName() })
+            .ToListAsync();
+        return Ok(result);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTheoryLinks(long theoryId)
+    {
+        var result = await context.TheoreticalMaterialLinks
+        .AsNoTracking()
+            .Where(m => m.TheoreticalMaterialId == theoryId)
+            .Select(m => new { m.Id, m.Link, m.Description })
+            .ToListAsync();
+        return Ok(result);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetPracticals(long moduleId)
     {
@@ -211,6 +258,16 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         return Ok();
     }
 
+    [HttpPut]
+    public async Task<IActionResult> UpdateTheoryText([FromBody] UpdateTheoryTextRequest request)
+    {
+        var theory = await context.TheoreticalMaterials.FirstOrDefaultAsync(m => m.Id == request.TheoryId);
+        if (theory is null) return BadRequest();
+        theory.Text = request.Text;
+        await context.SaveChangesAsync();
+        return Ok();
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateModule([FromBody] AddModuleRequest request)
     {
@@ -279,6 +336,46 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         return Ok();
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CreateTheory([FromBody] AddTheoryRequest request)
+    {
+        TheoreticalMaterial theory = new() { ModuleId = request.ModuleId, Name =  request.Name, Text = "Текст лекции" };
+        await context.TheoreticalMaterials.AddAsync(theory);
+        await context.SaveChangesAsync();
+        return Ok(new { theory.Id, theory.Name });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateTheoryDocument([FromForm] AddDocRequest request)
+    {
+        var fileName = await FileHelper.SaveFileToPublic(request.File);
+        var file = new TheoreticalMaterialFile()
+        {
+            Path = fileName,
+            Description = request.Descritpion,
+            TheoreticalMaterialId = request.TheoryMaterialId
+        };
+        await context.TheoreticalMaterialFiles.AddAsync(file);
+        await context.SaveChangesAsync();
+        return Ok(new { file.Id, file.Description, file.Path, Name = file.Path.GetPublicFileName() });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateTheoryLink([FromBody] AddLinkRequest request)
+    {
+        var link = new TheoreticalMaterialLink()
+        {
+            Link = request.Link,
+            Description = request.Description,
+            TheoreticalMaterialId = request.TheoryMaterialId
+        };
+        await context.TheoreticalMaterialLinks.AddAsync(link);
+        await context.SaveChangesAsync();
+        return Ok(new { link.Id, link.Description, link.Link });
+    }
+
+
+
     [HttpDelete]
     public async Task<IActionResult> DeleteCourse(long courseId)
     {
@@ -297,6 +394,36 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     public async Task<IActionResult> DeletePractical(long practicalId)
     {
         await context.PracticalMaterials.Where(c => c.Id == practicalId).ExecuteDeleteAsync();
+        return Ok();
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteQuestion(long questionId)
+    {
+        await context.Questions.Where(q => q.Id == questionId).ExecuteDeleteAsync();
+        return Ok();
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteTheoryMaterial(long theoryId)
+    {
+        await context.TheoreticalMaterials.Where(q => q.Id == theoryId).ExecuteDeleteAsync();
+        return Ok();
+    }
+    [HttpDelete]
+    public async Task<IActionResult> DeleteTheoryLink(long linkId)
+    {
+        await context.TheoreticalMaterialLinks.Where(q => q.Id == linkId).ExecuteDeleteAsync();
+        return Ok();
+    }
+    [HttpDelete]
+    public async Task<IActionResult> DeleteTheoryDoc(long docId)
+    {
+        var theorFile = await context.TheoreticalMaterialFiles.FirstOrDefaultAsync(f => f.Id == docId);
+        if (theorFile is null) return BadRequest();
+        FileHelper.DeleteFileFromPublic(theorFile.Path);
+        context.TheoreticalMaterialFiles.Remove(theorFile);
+        await context.SaveChangesAsync();
         return Ok();
     }
 }

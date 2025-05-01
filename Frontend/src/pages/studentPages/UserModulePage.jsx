@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import TestCard from "../../components/TestCard";
+import TestCard from "../../components/cards/TestCard";
 import { getTests } from "../../services/student.service";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";

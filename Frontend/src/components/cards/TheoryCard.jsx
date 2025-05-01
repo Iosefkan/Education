@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Card, Dropdown, Modal, Button } from 'react-bootstrap';
 import { ThreeDotsVertical } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
-import '../css/card.css';
+import '../../css/card.css';
 
-const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDelete, isStudent = false }) => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+const ModuleCard = ({ id, title, moduleId, canDelete = false, onDelete, isStudent = false }) => {
   const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleDelete = () => {
     setShowDeleteModal(false);
@@ -14,14 +14,14 @@ const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDele
   };
 
   const onClick = () => { 
-    navigate(isStudent ? '/userCourse' : '/course', { state: { courseId: id, courseTitle: title }});
+    navigate(isStudent ? '/theory' : '/makeTheory', { state: { theoryId: id, moduleId, theoryTitle: title }});
   };
 
   return (
     <>
-      <Card onClick={onClick} className="mb-3 shadow-sm" style={{ width: '350px', height: '200px', cursor: 'pointer' }}>
-        <Card.Header className="d-flex justify-content-between align-items-center">
-          <Card.Title className="mb-0">{title}</Card.Title>
+      <Card onClick={onClick} className="mb-3 shadow-sm" style={{ width: '350px', height: '150px', cursor: 'pointer' }}>
+        <Card.Header className="h-100 d-flex justify-content-between align-items-center">
+          <Card.Title className="mb-0 text-wrap">{title}</Card.Title>
           {canDelete && (<div onClick={e => e.stopPropagation()}>
             <Dropdown>
                 <Dropdown.Toggle 
@@ -45,18 +45,6 @@ const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDele
           </div>)}
 
         </Card.Header>
-
-        <Card.Body>
-          <Card.Text className="text-muted text-truncate text-wrap">
-            {description}
-          </Card.Text>
-        </Card.Body>
-
-        <Card.Footer>
-          <Card.Text className="mt-2 text-muted small">
-            Дата сдачи: {new Date(dueDate).toLocaleDateString()}
-          </Card.Text>
-        </Card.Footer>
       </Card>
 
 
@@ -66,7 +54,7 @@ const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDele
           <Modal.Title>Подтверждение удаления</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Вы уверены, что хотите удалить курс "{title}"?
+          Вы уверены, что хотите удалить лекционный материал "{title}"?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
@@ -81,4 +69,4 @@ const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDele
   );
 };
 
-export default CourseCard;
+export default ModuleCard;

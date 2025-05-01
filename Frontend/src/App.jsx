@@ -7,6 +7,7 @@ import CoursesPage from "./pages/teacherPages/CoursesPage";
 import CoursePage from "./pages/teacherPages/CoursePage";
 import ModulePage from "./pages/teacherPages/ModulePage";
 import MakeTestPage from "./pages/teacherPages/MakeTestPage";
+import MakeTheoryMaterialPage from "./pages/teacherPages/MakeTheoryMaterialPage";
 
 import UserCoursesPage from "./pages/studentPages/UserCoursesPage";
 import UserCoursePage from "./pages/studentPages/UserCoursePage";
@@ -24,6 +25,7 @@ const App = () => {
         <Route path="/course" element={<AuthGuard><CoursePage /></AuthGuard>} />
         <Route path="/module" element={<AuthGuard><ModulePage /></AuthGuard>} />
         <Route path="/makeTest" element={<AuthGuard><MakeTestPage /></AuthGuard>} />
+        <Route path="/makeTheory" element={<AuthGuard><MakeTheoryMaterialPage /></AuthGuard>} />
 
         <Route path="/userCourses" element={<AuthGuard><UserCoursesPage /></AuthGuard>} />
         <Route path="/userCourse" element={<AuthGuard><UserCoursePage /></AuthGuard>} />

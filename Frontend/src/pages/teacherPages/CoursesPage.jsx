@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import CourseCard from "../../components/CourseCard";
+import CourseCard from "../../components/cards/CourseCard";
 import CreateCourseModal from "../../components/sidebars/CreateCourseModal";
 import { useState, useEffect } from "react";
 import { deleteCourse, getCourses, createCourse } from "../../services/teacher.service";

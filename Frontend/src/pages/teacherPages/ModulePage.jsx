@@ -1,5 +1,7 @@
 import Layout from "../../components/Layout";
-import TestCard from "../../components/TestCard";
+import TestCard from "../../components/cards/TestCard";
+import TheoryCard from "../../components/cards/TheoryCard";
+
 import SingleChoiceQuestion from "../../components/questions/SingleChoiceQuestion";
 import MultipleChoiceQuestion from "../../components/questions/MultipleChoiceQuestion";
 import MatchingQuestion from "../../components/questions/MatchingQuestion";
@@ -13,7 +15,8 @@ import ShortAnswerQuestionEditor from "../../components/questionEditors/ShortAns
 import transformQuestionEditorToQuestion from "../../services/questionTransform";
 
 import CreateTestModal from "../../components/sidebars/CreateTestModal";
-import { deleteTest, getTests, createTest, createQuestion, getQuestions } from "../../services/teacher.service";
+import CreateTheoryModal from "../../components/sidebars/CreateTheoryModal";
+import { deleteTest, deleteTheory, getTests, getTheories, createTest, createTheory, createQuestion, getQuestions } from "../../services/teacher.service";
 import { useState, useEffect } from "react";
 import { Button, Tab, Nav, Container, Row, Col, ListGroup, Form } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
@@ -36,9 +39,11 @@ const ModulePage = () => {
     };
 
 
-    const [activeKey, setActiveKey] = useState('tests');
+    const [activeKey, setActiveKey] = useState('theory');
     const [tests, setTests] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [theories, setTheories] = useState([]);
+    const [showTestModal, setShowTestModal] = useState(false);
+    const [showTheoryModal, setShowTheoryModal] = useState(false);
     const { state } = useLocation();
     const { moduleId, moduleTitle } = state;
 
@@ -51,6 +56,14 @@ const ModulePage = () => {
     }, [moduleId, setTests])
 
     useEffect(() => {
+      async function InitTheories(){
+          const recTest = await getTheories(moduleId);
+          setTheories(recTest)
+      }
+      InitTheories();
+  }, [moduleId, setTheories])
+
+    useEffect(() => {
         async function initQuestions(){
             let recQuestions = await getQuestions(moduleId);
             recQuestions = recQuestions.map(q => { return {...q, body: JSON.parse(q.body)} })
@@ -59,14 +72,24 @@ const ModulePage = () => {
         initQuestions();
     }, [moduleId, setQuestions])
 
-    const handleCreate = async (testData) => {
+    const handleCreateTest = async (testData) => {
       const newTest = await createTest(moduleId, testData.name);
       setTests([...tests, newTest])
     }
   
-    const handleDelete = async (test) => {
+    const handleDeleteTest = async (test) => {
       await deleteTest(test.id);
       setTests(tests.filter(m => m.id !== test.id))
+    }
+
+    const handleCreateTheory = async (theoryData) => {
+      const newTheory = await createTheory(moduleId, theoryData.name);
+      setTheories([...theories, newTheory])
+    }
+  
+    const handleDeleteTheory = async (theory) => {
+      await deleteTheory(theory.id);
+      setTests(theories.filter(m => m.id !== theory.id))
     }
 
     const handleCreateQuestion = async (questionData) => {
@@ -92,6 +115,9 @@ const ModulePage = () => {
             <Col sm={2}>
               <Nav variant="pills" className="flex-column">
                 <Nav.Item>
+                  <Nav.Link eventKey="theory">Лекционные материалы</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
                   <Nav.Link eventKey="tests">Тесты</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -101,10 +127,41 @@ const ModulePage = () => {
             </Col>
             <Col sm={10}>
               <Tab.Content>
+              <Tab.Pane eventKey="theory">
+                  <div className="mb-5 d-flex flex-row align-items-center gap-5">
+                    <h1>Раздел "{moduleTitle}"</h1>
+                    <Button variant="outline-primary" onClick={() => setShowTheoryModal(true)}>
+                        Добавить лекцию
+                    </Button>
+                  </div>
+
+                  <h3 className="mb-3">Созданные лекции:</h3>
+                  <div className="d-flex flex-wrap justify-content-start align-items-center gap-4">
+                    {theories.length === 0 && (
+                        <div>Нет лекций</div>
+                    )}
+                    {theories.map((theory) => (
+                      <TheoryCard
+                        key={theory.id}
+                        id={theory.id}
+                        moduleId={moduleId}
+                        title={theory.name}
+                        canDelete={true}
+                        onDelete={() => handleDeleteTheory(theory)}
+                        />
+                    ))}
+                  </div>
+
+                  <CreateTheoryModal
+                    show={showTheoryModal}
+                    onHide={() => setShowTheoryModal(false)}
+                    onCreate={(courseData) => handleCreateTheory(courseData)}
+                  />
+                </Tab.Pane>
                 <Tab.Pane eventKey="tests">
                   <div className="mb-5 d-flex flex-row align-items-center gap-5">
-                    <h1>Модуль "{moduleTitle}"</h1>
-                    <Button variant="outline-primary" onClick={() => setShowModal(true)}>
+                    <h1>Раздел "{moduleTitle}"</h1>
+                    <Button variant="outline-primary" onClick={() => setShowTestModal(true)}>
                         Добавить тест
                     </Button>
                   </div>
@@ -121,15 +178,15 @@ const ModulePage = () => {
                         moduleId={moduleId}
                         title={test.name}
                         canDelete={true}
-                        onDelete={() => handleDelete(test)}
+                        onDelete={() => handleDeleteTest(test)}
                         />
                     ))}
                   </div>
 
                   <CreateTestModal
-                    show={showModal}
-                    onHide={() => setShowModal(false)}
-                    onCreate={(courseData) => handleCreate(courseData)}
+                    show={showTestModal}
+                    onHide={() => setShowTestModal(false)}
+                    onCreate={(courseData) => handleCreateTest(courseData)}
                   />
                 </Tab.Pane>
                 <Tab.Pane eventKey="questions">

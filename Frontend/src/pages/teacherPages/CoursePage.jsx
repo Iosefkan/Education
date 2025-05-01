@@ -1,5 +1,5 @@
 import Layout from "../../components/Layout";
-import ModuleCard from "../../components/ModuleCard";
+import ModuleCard from "../../components/cards/ModuleCard";
 import CreateModuleModal from "../../components/sidebars/CreateModuleModal";
 import MultiSelectSearch from "../../components/MultiSelectSearch";
 import { useState, useEffect } from "react";
@@ -80,14 +80,14 @@ const CoursePage = () => {
                   <div className="mb-5 d-flex flex-row align-items-center gap-5">
                     <h1>Курс "{courseTitle}"</h1>
                     <Button variant="outline-primary" onClick={() => setShowModal(true)}>
-                        Добавить модуль
+                        Добавить раздел
                     </Button>
                   </div>
 
-                  <h3 className="mb-3">Созданные модули:</h3>
+                  <h3 className="mb-3">Созданные разделы:</h3>
                   <div className="d-flex flex-wrap justify-content-start align-items-center gap-4">
                     {modules.length === 0 && (
-                        <div>Нет модулей</div>
+                        <div>Нет разделов</div>
                     )}
                     {modules.map((module) => (
                       <ModuleCard
