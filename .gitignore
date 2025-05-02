@@ -27,3 +27,5 @@ appsettings.json
 *.csproj.user
 
 node_modules/
+*.docx
+*.pptx
