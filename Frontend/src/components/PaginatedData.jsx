@@ -1,25 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Table, Pagination, Form, Spinner } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { Pagination, Form } from "react-bootstrap";
 
-const PaginatedTable = ({ 
-  data, 
-  columns, 
+const PaginatedData = ({
+  data,
+  length,
+  columns,
   pageSizeOptions = [10, 25, 50],
-  isLoading = false
+  isLoading = false,
+  children,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(pageSizeOptions[0]);
   const [paginatedData, setPaginatedData] = useState([]);
 
-  // Calculate total pages
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
-  // Handle pagination
   useEffect(() => {
+    if ((currentPage - 1) * itemsPerPage >= data.length){
+        setCurrentPage(currentPage - 1);
+    }
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     setPaginatedData(data.slice(startIndex, endIndex));
-  }, [data, currentPage, itemsPerPage]);
+  }, [data, currentPage, itemsPerPage, setCurrentPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -27,7 +30,7 @@ const PaginatedTable = ({
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset to first page when page size changes
+    setCurrentPage(1);
   };
 
   const renderPaginationItems = () => {
@@ -51,12 +54,12 @@ const PaginatedTable = ({
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center gap-2">
           <span>Показывать:</span>
-          <Form.Select 
+          <Form.Select
             value={itemsPerPage}
             onChange={handleItemsPerPageChange}
-            style={{ width: '80px' }}
+            style={{ width: "80px" }}
           >
-            {pageSizeOptions.map(option => (
+            {pageSizeOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -64,63 +67,42 @@ const PaginatedTable = ({
           </Form.Select>
           <span>записей</span>
         </div>
-        
+
         <Pagination className="mb-0">
-          <Pagination.Prev 
+          <Pagination.Prev
             disabled={currentPage === 1}
             onClick={() => handlePageChange(currentPage - 1)}
           />
           {renderPaginationItems()}
-          <Pagination.Next 
+          <Pagination.Next
             disabled={currentPage === totalPages}
             onClick={() => handlePageChange(currentPage + 1)}
           />
         </Pagination>
       </div>
 
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th key={column.key}>{column.header}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading ? (
-            <tr>
-              <td colSpan={columns.length} className="text-center">
-                <Spinner animation="border" role="status">
-                  <span className="visually-hidden">Загрузка...</span>
-                </Spinner>
-              </td>
-            </tr>
-          ) : (
-            paginatedData.map((item, index) => (
-              <tr key={index}>
-                {columns.map((column) => (
-                  <td key={column.key} width={column.width}>
-                    {column.render ? column.render(item) : item[column.key]}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+      {React.cloneElement(children, {
+        data: paginatedData,
+        isLoading,
+        columns,
+        length,
+        itemsPerPage,
+        currentPage
+      })}
 
       <div className="d-flex justify-content-between align-items-center mt-3">
         <div>
-          Показано с {((currentPage - 1) * itemsPerPage) + 1} по{' '}
-          {Math.min(currentPage * itemsPerPage, data.length)} из {data.length} записей
+          Показано с {(currentPage - 1) * itemsPerPage + 1} по{" "}
+          {Math.min(currentPage * itemsPerPage, data.length)} из {data.length}{" "}
+          записей
         </div>
         <Pagination className="mb-0">
-          <Pagination.Prev 
+          <Pagination.Prev
             disabled={currentPage === 1}
             onClick={() => handlePageChange(currentPage - 1)}
           />
           {renderPaginationItems()}
-          <Pagination.Next 
+          <Pagination.Next
             disabled={currentPage === totalPages}
             onClick={() => handlePageChange(currentPage + 1)}
           />
@@ -130,5 +112,4 @@ const PaginatedTable = ({
   );
 };
 
-
-export default PaginatedTable;
+export default PaginatedData;

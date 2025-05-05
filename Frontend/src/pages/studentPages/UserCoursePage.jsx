@@ -1,7 +1,7 @@
 import Layout from "../../components/Layout";
 import ModuleCard from "../../components/cards/ModuleCard";
 import { useState, useEffect } from "react";
-import { getModules } from "../../services/student.service";
+import { getModules } from "../../services/shared.service";
 import { useLocation } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -24,7 +24,7 @@ const UserCoursePage = () => {
         <h1>Курс "{courseTitle}"</h1>
         </div>
 
-        <h3 className="mb-3">Модули:</h3>
+        <h3 className="mb-3">Разделы:</h3>
         <div className="d-flex flex-wrap justify-content-start align-items-center gap-4">
         {modules.length === 0 && (
             <div>Нет модулей</div>

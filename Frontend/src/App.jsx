@@ -6,13 +6,16 @@ import AdminPage from "./pages/AdminPage";
 import CoursesPage from "./pages/teacherPages/CoursesPage";
 import CoursePage from "./pages/teacherPages/CoursePage";
 import ModulePage from "./pages/teacherPages/ModulePage";
-import MakeTestPage from "./pages/teacherPages/MakeTestPage";
+import MakePracticalPage from "./pages/teacherPages/MakePracticalPage";
+import MakeTaskPage from "./pages/teacherPages/MakeTaskPage";
 import MakeTheoryMaterialPage from "./pages/teacherPages/MakeTheoryMaterialPage";
 
 import UserCoursesPage from "./pages/studentPages/UserCoursesPage";
 import UserCoursePage from "./pages/studentPages/UserCoursePage";
 import UserModulePage from "./pages/studentPages/UserModulePage";
-import UserTestPage from "./pages/studentPages/UserTestPage";
+import UserPracticalPage from "./pages/studentPages/UserPracticalPage";
+import UserTheoryMaterialPage from "./pages/studentPages/UserTheoryMaterialPage"
+import UserTaskPage from "./pages/studentPages/UserTaskPage"
 
 const App = () => {
   return (
@@ -24,13 +27,16 @@ const App = () => {
         <Route path="/courses" element={<AuthGuard><CoursesPage /></AuthGuard>} />
         <Route path="/course" element={<AuthGuard><CoursePage /></AuthGuard>} />
         <Route path="/module" element={<AuthGuard><ModulePage /></AuthGuard>} />
-        <Route path="/makeTest" element={<AuthGuard><MakeTestPage /></AuthGuard>} />
+        <Route path="/makeTest" element={<AuthGuard><MakePracticalPage /></AuthGuard>} />
         <Route path="/makeTheory" element={<AuthGuard><MakeTheoryMaterialPage /></AuthGuard>} />
+        <Route path="/makeTask" element={<AuthGuard><MakeTaskPage /></AuthGuard>} />
 
         <Route path="/userCourses" element={<AuthGuard><UserCoursesPage /></AuthGuard>} />
         <Route path="/userCourse" element={<AuthGuard><UserCoursePage /></AuthGuard>} />
         <Route path="/userModule" element={<AuthGuard><UserModulePage /></AuthGuard>} />
-        <Route path="/test" element={<AuthGuard><UserTestPage /></AuthGuard>} />
+        <Route path="/test" element={<AuthGuard><UserPracticalPage /></AuthGuard>} />
+        <Route path="/theory" element={<AuthGuard><UserTheoryMaterialPage /></AuthGuard>} />
+        <Route path="/task" element={<AuthGuard><UserTaskPage /></AuthGuard>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>

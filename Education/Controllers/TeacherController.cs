@@ -16,6 +16,18 @@ namespace Education.Controllers;
 public class TeacherController(ApplicationContext context) : ControllerBase
 {
     [HttpGet]
+    public async Task<IActionResult> GetTaskFiles(long taskId)
+    {
+        var result = await context.CaseFiles
+            .Include(cf => cf.User)
+            .AsNoTracking()
+            .Where(cf => cf.CaseId == taskId)
+            .Select(cf => new { cf.Path, Name = cf.Path.GetPublicFileName(), cf.UserId, FullName = cf.User.GetFullName() })
+            .ToListAsync();
+        return Ok(result);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetStudents(long courseId)
     {
         var result = await context.Users
@@ -26,7 +38,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             .Select(u => new
             {
                 Value = u.Id,
-                Label = $"{u.LastName} {u.FirstName} {u.MiddleName}",
+                Label = u.GetFullName(),
                 IsEnrolled = u.CourseBindUsers.Any(c => c.CourseId == courseId),
             })
             .ToListAsync();
@@ -44,7 +56,8 @@ public class TeacherController(ApplicationContext context) : ControllerBase
                 q.Id,
                 q.Text,
                 Type = q.QuestionTypeId,
-                Body = q.Options
+                q.Weight,
+                q.Answer
             })
             .OrderByDescending(q => q.Id)
             .ToListAsync();
@@ -86,72 +99,6 @@ public class TeacherController(ApplicationContext context) : ControllerBase
                 c.Description,
                 c.Name,
             })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetModules(long courseId)
-    {
-        var result = await context.Modules
-            .AsNoTracking()
-            .Where(m => m.CourseId == courseId)
-            .Select(m => new { m.Id, m.Name })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetTheories(long moduleId)
-    {
-        var result = await context.TheoreticalMaterials
-            .AsNoTracking()
-            .Where(m => m.ModuleId == moduleId)
-            .Select(m => new { m.Id, m.Name })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetTheoryText(long theoryId)
-    {
-        var theory = await context.TheoreticalMaterials
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == theoryId);
-        if (theory is null) return BadRequest();
-
-        return Ok(new { theory.Text});
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetTheoryDocs(long theoryId)
-    {
-        var result = await context.TheoreticalMaterialFiles
-        .AsNoTracking()
-            .Where(m => m.TheoreticalMaterialId == theoryId)
-            .Select(m => new { m.Id, m.Path, m.Description, Name = m.Path.GetPublicFileName() })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetTheoryLinks(long theoryId)
-    {
-        var result = await context.TheoreticalMaterialLinks
-        .AsNoTracking()
-            .Where(m => m.TheoreticalMaterialId == theoryId)
-            .Select(m => new { m.Id, m.Link, m.Description })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetPracticals(long moduleId)
-    {
-        var result = await context.PracticalMaterials
-            .AsNoTracking()
-            .Where(m => m.ModuleId == moduleId)
-            .Select(m => new { m.Id, m.Name })
             .ToListAsync();
         return Ok(result);
     }
@@ -259,11 +206,36 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     }
 
     [HttpPut]
+    public async Task<IActionResult> UpdateQuestion([FromBody] UpdateQuestionRequest request)
+    {
+        var question = await context.Questions
+            .FirstOrDefaultAsync(q => q.Id == request.QuestionId);
+
+        if (question is null) return NotFound();
+        question.Answer = request.Answer;
+        question.Options = request.Body;
+        question.Weight = request.Weight;
+        question.Text = request.Text;
+        await context.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpPut]
     public async Task<IActionResult> UpdateTheoryText([FromBody] UpdateTheoryTextRequest request)
     {
         var theory = await context.TheoreticalMaterials.FirstOrDefaultAsync(m => m.Id == request.TheoryId);
         if (theory is null) return BadRequest();
         theory.Text = request.Text;
+        await context.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateTaskText([FromBody] UpdateTaskTextRequest request)
+    {
+        var task = await context.Cases.FirstOrDefaultAsync(c => c.Id == request.TaskId);
+        if (task is null) return BadRequest();
+        task.Text = request.Text;
         await context.SaveChangesAsync();
         return Ok();
     }
@@ -313,7 +285,8 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             question.Id,
             question.Text,
             Type = question.QuestionTypeId,
-            Body = question.Options
+            question.Weight,
+            question.Answer
         });
     }
 
@@ -343,6 +316,15 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         await context.TheoreticalMaterials.AddAsync(theory);
         await context.SaveChangesAsync();
         return Ok(new { theory.Id, theory.Name });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateTask([FromBody] AddTaskRequest request)
+    {
+        Case task = new() { PracticalMaterialId = request.PracticalId, Name = request.Name, Text = "Текст задания" };
+        await context.Cases.AddAsync(task);
+        await context.SaveChangesAsync();
+        return Ok(new { task.Id, task.Name });
     }
 
     [HttpPost]
@@ -410,12 +392,21 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         await context.TheoreticalMaterials.Where(q => q.Id == theoryId).ExecuteDeleteAsync();
         return Ok();
     }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteTask(long taskId)
+    {
+        await context.Cases.Where(q => q.Id == taskId).ExecuteDeleteAsync();
+        return Ok();
+    }
+
     [HttpDelete]
     public async Task<IActionResult> DeleteTheoryLink(long linkId)
     {
         await context.TheoreticalMaterialLinks.Where(q => q.Id == linkId).ExecuteDeleteAsync();
         return Ok();
     }
+
     [HttpDelete]
     public async Task<IActionResult> DeleteTheoryDoc(long docId)
     {

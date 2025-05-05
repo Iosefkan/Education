@@ -28,7 +28,7 @@ const SingleChoiceQuestion = ({
           {options.map((option, index) => (
             <ListGroup.Item 
               key={option.id}
-              action
+              action={!isReadonly}
               onClick={(e) => {
                 if (isReadonly) return;
                 e.preventDefault();

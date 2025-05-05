@@ -1,24 +1,33 @@
-import { useState } from 'react';
-import { Alert, Button, Form, ListGroup, Card } from 'react-bootstrap';
-import { PlusCircle, Trash } from 'react-bootstrap-icons';
+import { useState } from "react";
+import { Alert, Button, Form, ListGroup, Card } from "react-bootstrap";
+import { PlusCircle, Trash } from "react-bootstrap-icons";
 
-const SingleChoiceQuestionEditor = ({ question, onSave }) => {
-  const [questionText, setQuestionText] = useState(question?.text || '');
-  const [questionWeight, setQuestionWeight] = useState('');
-  const [answers, setAnswers] = useState(question?.answers || []);
-  const [correctAnswerId, setCorrectAnswerId] = useState(question?.correctAnswerId || null);
+const SingleChoiceQuestionEditor = ({
+  onSave,
+  initText = "",
+  initWeight = "",
+  initAnswers = [],
+  initCorrectId = null,
+  showCancel = false,
+  onCancel = null,
+  id,
+}) => {
+  const [questionText, setQuestionText] = useState(initText);
+  const [questionWeight, setQuestionWeight] = useState(initWeight);
+  const [answers, setAnswers] = useState(initAnswers);
+  const [correctAnswerId, setCorrectAnswerId] = useState(initCorrectId);
   const [errors, setErrors] = useState({});
 
   const addAnswer = () => {
     const newAnswer = {
       id: `scq${answers.length + 1}`,
-      text: ''
+      text: "",
     };
     setAnswers([...answers, newAnswer]);
   };
 
   const deleteAnswer = (answerId) => {
-    const updatedAnswers = answers.filter(a => a.id !== answerId);
+    const updatedAnswers = answers.filter((a) => a.id !== answerId);
     setAnswers(updatedAnswers);
     if (correctAnswerId === answerId) {
       setCorrectAnswerId(null);
@@ -26,51 +35,61 @@ const SingleChoiceQuestionEditor = ({ question, onSave }) => {
   };
 
   const handleAnswerChange = (answerId, newText) => {
-    setAnswers(answers.map(a => 
-      a.id === answerId ? { ...a, text: newText } : a
-    ));
+    setAnswers(
+      answers.map((a) => (a.id === answerId ? { ...a, text: newText } : a))
+    );
   };
 
   const handleValidateQuestionWeight = (e) => {
-    if (e.target.value < 0){
-      e.target.value = '';
+    if (e.target.value < 0) {
+      e.target.value = "";
     }
-  }
+  };
 
   const validate = () => {
     const newErrors = {};
-    if (!questionWeight) newErrors.weight = 'Введите вес вопроса';
-    if (!questionText.trim()) newErrors.question = 'Заполните текст вопроса';
-    if (answers.some(a => !a.text.trim())) newErrors.answers = 'Заполните текст всех ответов';
-    if (!correctAnswerId) newErrors.correctAnswer = 'Выберите верный ответ';
-    if (answers.length < 2) newErrors.answersCount = 'Должно быть как минимум два ответа';
-    
+    if (!questionWeight) newErrors.weight = "Введите вес вопроса";
+    if (!questionText.trim()) newErrors.question = "Заполните текст вопроса";
+    if (answers.some((a) => !a.text.trim()))
+      newErrors.answers = "Заполните текст всех ответов";
+    if (!correctAnswerId) newErrors.correctAnswer = "Выберите верный ответ";
+    if (answers.length < 2)
+      newErrors.answersCount = "Должно быть как минимум два ответа";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
     if (!validate()) return;
-    
+
     const questionData = {
       type: 1,
       text: questionText,
       weight: questionWeight,
       answers: answers.map(({ id, text, weight }) => ({ id, text, weight })),
-      correctAnswerId
+      correctAnswerId,
     };
-    
+
     onSave(questionData);
+    setQuestionText('');
+    setQuestionWeight('');
+    setAnswers([]);
+    setCorrectAnswerId(null);
   };
 
   return (
     <Card className="mb-4 shadow-sm">
+      <Card.Header className="bg-light d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">Вопрос {id}</h5>
+      </Card.Header>
       <Card.Body>
         <Form.Group className="mb-4">
           <Form.Label>Текст вопроса</Form.Label>
           <Form.Control
             as="textarea"
             rows={2}
+            placeholder="Введите текст вопроса"
             value={questionText}
             onChange={(e) => setQuestionText(e.target.value)}
             isInvalid={!!errors.question}
@@ -118,8 +137,11 @@ const SingleChoiceQuestionEditor = ({ question, onSave }) => {
 
         <ListGroup>
           {answers.map((answer) => (
-            <ListGroup.Item key={answer.id} className="d-flex align-items-center gap-3 py-3">
-              <Form.Check 
+            <ListGroup.Item
+              key={answer.id}
+              className="d-flex align-items-center gap-3 py-3"
+            >
+              <Form.Check
                 type="radio"
                 name="correctAnswer"
                 id={`correct-${answer.id}`}
@@ -127,14 +149,14 @@ const SingleChoiceQuestionEditor = ({ question, onSave }) => {
                 onChange={() => setCorrectAnswerId(answer.id)}
                 className="flex-shrink-0"
               />
-              
+
               <Form.Control
                 value={answer.text}
                 onChange={(e) => handleAnswerChange(answer.id, e.target.value)}
                 placeholder="Введите текст ответа"
                 isInvalid={!!errors.answers && !answer.text.trim()}
               />
-              
+
               <Button
                 variant="outline-danger"
                 onClick={() => deleteAnswer(answer.id)}
@@ -157,6 +179,11 @@ const SingleChoiceQuestionEditor = ({ question, onSave }) => {
           <Button variant="primary" onClick={handleSave}>
             Сохранить вопрос
           </Button>
+          {showCancel && (
+            <Button variant="secondary" onClick={onCancel}>
+              Отменить редактирование
+            </Button>
+          )}
         </div>
       </Card.Body>
     </Card>

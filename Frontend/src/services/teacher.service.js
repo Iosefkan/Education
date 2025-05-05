@@ -19,31 +19,6 @@ export const deleteCourse = async (courseId) => {
     return true;
 }
 
-export const getModules = async (courseId) => {
-    const response = await axios.get(`api/Teacher/GetModules?courseId=${courseId}`);
-    return response.data;
-};
-
-export const getTheories = async (moduleId) => {
-    const response = await axios.get(`api/Teacher/GetTheories?moduleId=${moduleId}`);
-    return response.data;
-};
-
-export const getTheoryText = async (theoryId) => {
-    const response = await axios.get(`api/Teacher/GetTheoryText?theoryId=${theoryId}`);
-    return response.data.text
-}
-
-export const getTheoryLinks = async (theoryId) => {
-    const response = await axios.get(`api/Teacher/GetTheoryLinks?theoryId=${theoryId}`);
-    return response.data;
-};
-
-export const getTheoryDocs = async (theoryId) => {
-    const response = await axios.get(`api/Teacher/GetTheoryDocs?theoryId=${theoryId}`);
-    return response.data;
-};
-
 export const createModule = async (courseId, name) => {
     const response = await axios.post('api/Teacher/CreateModule', {
     courseId,
@@ -86,6 +61,22 @@ export const deleteModule = async (moduleId) => {
     return true;
 }
 
+export const deleteQuestion = async (questionId) => {
+    await axios.delete(`api/Teacher/DeleteQuestion?questionId=${questionId}`);
+    return true;
+}
+
+export const updateQuestion = async (questionId, body, answer, weight, text) => {
+    await axios.put('api/Teacher/UpdateQuestion', {
+        questionId,
+        body,
+        answer,
+        weight,
+        text
+    });
+    return true;
+}
+
 export const deleteTheory = async (theoryId) => {
     await axios.delete(`api/Teacher/DeleteTheoryMaterial?theoryId=${theoryId}`);
     return true;
@@ -124,13 +115,6 @@ export const saveUsers = async (courseId, selectedUsers) => {
     }
 }
 
-
-
-export const getTests = async (moduleId) => {
-    const response = await axios.get(`api/Teacher/GetPracticals?moduleId=${moduleId}`);
-    return response.data;
-};
-
 export const createTest = async (moduleId, name) => {
     const response = await axios.post('api/Teacher/CreatePractical', {
         moduleId,
@@ -144,7 +128,36 @@ export const deleteTest = async (testId) => {
     return true;
 }
 
+export const createTask = async (practicalId, name) => {
+    const response = await axios.post('api/Teacher/CreateTask', {
+        practicalId,
+        name
+    });
+    return response.data;
+}
 
+export const deleteTask = async (taskId) => {
+    await axios.delete(`api/Teacher/DeleteTask?taskId=${taskId}`);
+    return true;
+}
+
+export const getTaskFiles = async (taskId) => {
+    const response = await axios.get(`api/Teacher/GetTaskFiles?taskId=${taskId}`);
+    return response.data;
+}
+
+export const updateTaskText = async (taskId, text) => {
+    try{
+        await axios.put('api/Teacher/UpdateTaskText', {
+            taskId,
+            text
+        })
+        return true;
+    }
+    catch{
+        return false;
+    }
+}
 
 export const getQuestions = async (moduleId) => {
     const response = await axios.get(`api/Teacher/GetQuestions?moduleId=${moduleId}`);

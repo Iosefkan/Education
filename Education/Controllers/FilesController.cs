@@ -2,8 +2,6 @@
 using Education.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using System.IO;
 
 namespace Education.Controllers;
 
@@ -23,7 +21,6 @@ public class FilesController : ControllerBase
             await stream.CopyToAsync(memory);
         }
         memory.Position = 0;
-        var ext = Path.GetExtension(filePath).ToLowerInvariant();
         return File(memory, "application/octet-stream", file.GetPublicFileName());
     }
 }

@@ -1,10 +1,11 @@
 import Layout from "../components/Layout";
-import PaginatedTable from "../components/PaginatedTable"
+import PaginatedData from "../components/PaginatedData"
 import CreateUserModal from "../components/sidebars/CreateUserModal";
 import { Button, Modal } from 'react-bootstrap';
 import { Trash } from 'react-bootstrap-icons';
 import { useState, useEffect } from "react";
 import { getUsers, createUser, canDeleteUser, deleteUser } from "../services/users.service";
+import UserTable from "../components/UserTable";
 
 const AdminPage = () => {
     const [users, setUsers] = useState([]);
@@ -76,12 +77,14 @@ const AdminPage = () => {
     return (
       <Layout isAdmin={true}>
         <Button className="mb-4" onClick={() => setCreateShowModal(true)}>Добавить пользователя</Button>
-        <PaginatedTable
+        <PaginatedData
           data={users}
           columns={columns}
           pageSizeOptions={[10, 25, 50]}
           isLoading={false}
-        />
+        >
+          <UserTable/>
+        </PaginatedData>
 
         <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
           <Modal.Header closeButton>

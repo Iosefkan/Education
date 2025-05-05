@@ -1,40 +1,55 @@
-import { useState } from 'react';
-import { Card, Form, Button, Alert } from 'react-bootstrap';
+import { useState } from "react";
+import { Card, Form, Button, Alert } from "react-bootstrap";
 
-const ShortAnswerQuestionEditor = ({ question, onSave }) => {
-  const [questionText, setQuestionText] = useState(question?.text || '');
-  const [questionWeight, setQuestionWeight] = useState('');
-  const [correctAnswer, setCorrectAnswer] = useState(question?.answer || '');
+const ShortAnswerQuestionEditor = ({
+  onSave,
+  initText = "",
+  initWeight = "",
+  initAnswer = "",
+  showCancel = false,
+  onCancel = null,
+  id,
+}) => {
+  const [questionText, setQuestionText] = useState(initText);
+  const [questionWeight, setQuestionWeight] = useState(initWeight);
+  const [correctAnswer, setCorrectAnswer] = useState(initAnswer);
   const [errors, setErrors] = useState({});
 
   const validate = () => {
     const newErrors = {};
-    if (!questionWeight) newErrors.weight = 'Введите вес вопроса';
-    if (!questionText.trim()) newErrors.question = 'Заполните текст вопроса';
-    if (!correctAnswer.trim()) newErrors.answer = 'Заполните ответ';
+    if (!questionWeight) newErrors.weight = "Введите вес вопроса";
+    if (!questionText.trim()) newErrors.question = "Заполните текст вопроса";
+    if (!correctAnswer.trim()) newErrors.answer = "Заполните ответ";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleValidateQuestionWeight = (e) => {
-    if (e.target.value < 0){
-      e.target.value = '';
+    if (e.target.value < 0) {
+      e.target.value = "";
     }
-  }
+  };
 
   const handleSave = () => {
     if (!validate()) return;
-    
+
     onSave({
       type: 4,
       text: questionText,
       answer: correctAnswer,
-      weight: questionWeight
+      weight: questionWeight,
     });
+
+    setQuestionText('');
+    setQuestionWeight('');
+    setCorrectAnswer('');
   };
 
   return (
     <Card className="mb-4 shadow-sm">
+      <Card.Header className="bg-light d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">Вопрос {id}</h5>
+      </Card.Header>
       <Card.Body>
         <Form.Group className="mb-4">
           <Form.Label>Текст вопроса</Form.Label>
@@ -68,7 +83,6 @@ const ShortAnswerQuestionEditor = ({ question, onSave }) => {
           </Form.Control.Feedback>
         </Form.Group>
 
-
         <Form.Group className="mb-4">
           <Form.Label>Ответ</Form.Label>
           <Form.Control
@@ -89,10 +103,15 @@ const ShortAnswerQuestionEditor = ({ question, onSave }) => {
           </Alert>
         )}
 
-        <div className="d-flex justify-content-end">
+        <div className="d-flex justify-content-end mt-4 gap-2">
           <Button variant="primary" onClick={handleSave}>
             Сохранить вопрос
           </Button>
+          {showCancel && (
+            <Button variant="secondary" onClick={onCancel}>
+              Отменить редактирование
+            </Button>
+          )}
         </div>
       </Card.Body>
     </Card>

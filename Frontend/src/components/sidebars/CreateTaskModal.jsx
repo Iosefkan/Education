@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Modal, Button, Form, FloatingLabel } from 'react-bootstrap';
 
-const CreateTestModal = ({ show, onHide, onCreate }) => {
+const CreateTaskModal = ({ show, onHide, onCreate }) => {
   const [title, setTitle] = useState('');
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
     const newErrors = {};
-    if (!title.trim()) newErrors.title = 'Введите название практики';
+    if (!title.trim()) newErrors.title = 'Введите название задания';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -31,7 +31,7 @@ const CreateTestModal = ({ show, onHide, onCreate }) => {
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Создание новой практики</Modal.Title>
+        <Modal.Title>Создание нового задания</Modal.Title>
       </Modal.Header>
       
       <Form onSubmit={handleSubmit}>
@@ -54,7 +54,7 @@ const CreateTestModal = ({ show, onHide, onCreate }) => {
             Отменить
           </Button>
           <Button variant="primary" type="submit">
-            Создать практику
+            Создать задание
           </Button>
         </Modal.Footer>
       </Form>
@@ -62,4 +62,4 @@ const CreateTestModal = ({ show, onHide, onCreate }) => {
   );
 };
 
-export default CreateTestModal;
+export default CreateTaskModal;

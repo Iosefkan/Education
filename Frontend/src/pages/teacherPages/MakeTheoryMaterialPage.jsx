@@ -3,10 +3,12 @@ import { Accordion, Form, Button, Card, Modal, Alert } from 'react-bootstrap';
 import { PlusCircle, Trash, Link45deg, FileWord, BodyText } from 'react-bootstrap-icons';
 import { useLocation } from "react-router-dom";
 import RichTextEditor from '../../components/RichTextEditor';
-import { updateTheoryText, getTheoryText,
-  createTheoryDoc, deleteDoc, getTheoryDocs,
-  createTheoryLink, deleteLink, getTheoryLinks
+import { updateTheoryText,
+  createTheoryDoc, deleteDoc,
+  createTheoryLink, deleteLink,
  } from '../../services/teacher.service';
+import { getTheoryText, getTheoryDocs, getTheoryLinks } from "../../services/shared.service";
+import Layout from '../../components/Layout';
 
 const MakeTheoryMaterialPage = () => {
   const { state } = useLocation();
@@ -75,10 +77,8 @@ const MakeTheoryMaterialPage = () => {
   const isValidHttpUrl = (str) => {    
     try {
       new URL(str);
-      console.log('valid');
       return true;
     } catch {
-      console.log('invalid');
       return false;
     }
   }
@@ -134,186 +134,187 @@ const MakeTheoryMaterialPage = () => {
   }
 
   return (
-    <Card className="shadow-lg">
-      <Card.Header className="bg-light">
-        <h2>{theoryTitle}</h2>
-      </Card.Header>
+    <Layout>
+      <Card className="shadow-lg">
+        <Card.Header className="bg-light">
+          <h2>{theoryTitle}</h2>
+        </Card.Header>
 
-      <Card.Body>
-        <Accordion defaultActiveKey={['0']} alwaysOpen>
-        <Accordion.Item eventKey="0">
-            <Accordion.Header>
-              <BodyText className="me-2" /> Текст лекции
-            </Accordion.Header>
-            <Accordion.Body>
-              {saveMessage.message && (
-                <Alert variant={saveMessage.isError ? "danger" : "success"} className="mt-3">
-                  {saveMessage.message}
-                </Alert>
-              )}
-              <Button 
-                className="mb-3"
-                onClick={() => handleUpdateText()}
-              >
-                Сохранить текст лекции
-              </Button>
-              <RichTextEditor 
-                value={content} 
-                onChange={(value) => setContent(value)}
-                placeholder="Текст лекции..."
-              />
-            </Accordion.Body>
-          </Accordion.Item>
+        <Card.Body>
+          <Accordion defaultActiveKey={['0']} alwaysOpen>
+          <Accordion.Item eventKey="0">
+              <Accordion.Header>
+                <BodyText className="me-2" /> Текст лекции
+              </Accordion.Header>
+              <Accordion.Body>
+                {saveMessage.message && (
+                  <Alert variant={saveMessage.isError ? "danger" : "success"} className="mt-3">
+                    {saveMessage.message}
+                  </Alert>
+                )}
+                <Button 
+                  className="mb-3"
+                  onClick={() => handleUpdateText()}
+                >
+                  Сохранить текст лекции
+                </Button>
+                <RichTextEditor 
+                  value={content} 
+                  onChange={(value) => setContent(value)}
+                  placeholder="Текст лекции..."
+                />
+              </Accordion.Body>
+            </Accordion.Item>
 
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>
-              <FileWord className="me-2" /> Документы ({files.length})
-            </Accordion.Header>
-            <Accordion.Body>
-              {files.map((file) => (
-                <div key={file.id} className="mb-3 d-flex align-items-center gap-2">
-                  <div className="flex-grow-1">
-                    <div className="fw-bold">{file.description}</div>
-                    <a href={file.path}><small className="text-muted">{file.name}</small></a>
+            <Accordion.Item eventKey="1">
+              <Accordion.Header>
+                <FileWord className="me-2" /> Документы ({files.length})
+              </Accordion.Header>
+              <Accordion.Body>
+                {files.map((file) => (
+                  <div key={file.id} className="mb-3 d-flex align-items-center gap-2">
+                    <div className="flex-grow-1">
+                      <div className="fw-bold">{file.description}</div>
+                      <a href={file.path}><small className="text-muted">{file.name}</small></a>
+                    </div>
+                    <Button variant="outline-danger" size="sm" onClick={() => deleteFile(file.id)}>
+                      <Trash />
+                    </Button>
                   </div>
-                  <Button variant="outline-danger" size="sm" onClick={() => deleteFile(file.id)}>
-                    <Trash />
-                  </Button>
-                </div>
-              ))}
-              
-              <Button variant="outline-primary" onClick={handleShowAddDoc} className="mt-2">
-                <PlusCircle className="me-2" /> Добавить документ
-              </Button>
-            </Accordion.Body>
-          </Accordion.Item>
+                ))}
+                
+                <Button variant="outline-primary" onClick={handleShowAddDoc} className="mt-2">
+                  <PlusCircle className="me-2" /> Добавить документ
+                </Button>
+              </Accordion.Body>
+            </Accordion.Item>
 
-          <Accordion.Item eventKey="2">
-            <Accordion.Header>
-              <Link45deg className="me-2" /> Ссылки ({links.length})
-            </Accordion.Header>
-            <Accordion.Body>
-              <ul>
-              {links.map((link) => (
-              <li key={link.id}>
-                <div className="mb-3 d-flex justify-content-between align-items-start gap-2">
-                  <div className="flex-grow-1">
-                    <a 
-                      href={link.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="fw-bold text-break"
+            <Accordion.Item eventKey="2">
+              <Accordion.Header>
+                <Link45deg className="me-2" /> Ссылки ({links.length})
+              </Accordion.Header>
+              <Accordion.Body>
+                <ul className="mb-0">
+                {links.map((link) => (
+                <li key={link.id}>
+                  <div className="mb-3 d-flex justify-content-between align-items-start gap-2">
+                    <div className="flex-grow-1">
+                      <a 
+                        href={link.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="fw-bold text-break"
+                      >
+                        {link.description}
+                      </a>
+                    </div>
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm" 
+                      onClick={() => delLink(link.id)}
+                      className="flex-shrink-0 ms-2"
                     >
-                      {link.description}
-                    </a>
+                      <Trash />
+                    </Button>
                   </div>
-                  <Button 
-                    variant="outline-danger" 
-                    size="sm" 
-                    onClick={() => delLink(link.id)}
-                    className="flex-shrink-0 ms-2"
-                  >
-                    <Trash />
-                  </Button>
-                </div>
-              </li>
-              ))}
-              </ul>
-              <Button variant="outline-primary" onClick={handleShowAddLink} className="mt-2">
-                <PlusCircle className="me-2" /> Добавить ссылку
+                </li>
+                ))}
+                </ul>
+                <Button variant="outline-primary" onClick={handleShowAddLink} className="mt-2">
+                  <PlusCircle className="me-2" /> Добавить ссылку
+                </Button>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+
+          <Modal show={showAddDocModal} onHide={handleCloseAddDoc}>
+            <Modal.Header>
+              <Modal.Title>Добавить документ</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label>Документы (.docx, .pptx)</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept=".docx, .pptx"
+                    onChange={(e) => setNewDoc({ ...newDoc, file: e.target.files[0] })}
+                    isInvalid={!!fileErrors.file}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {fileErrors.file}
+                  </Form.Control.Feedback>
+                </Form.Group>
+
+                <Form.Group>
+                  <Form.Label>Описание</Form.Label>
+                  <Form.Control
+                    as="textarea" rows={2}
+                    value={newDoc.description}
+                    onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
+                    isInvalid={!!fileErrors.description}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {fileErrors.description}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleCloseAddDoc}>
+                Отменить
               </Button>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
+              <Button variant="primary" onClick={handleAddDocument}>
+                Добавить документ
+              </Button>
+            </Modal.Footer>
+          </Modal>
 
-        <Modal show={showAddDocModal} onHide={handleCloseAddDoc}>
-          <Modal.Header>
-            <Modal.Title>Добавить документ</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Документы (.docx, .pptx)</Form.Label>
-                <Form.Control
-                  type="file"
-                  accept=".docx, .pptx"
-                  onChange={(e) => setNewDoc({ ...newDoc, file: e.target.files[0] })}
-                  isInvalid={!!fileErrors.file}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {fileErrors.file}
-                </Form.Control.Feedback>
-              </Form.Group>
+          <Modal show={showAddLinkModal} onHide={handleCloseAddLink}>
+            <Modal.Header>
+              <Modal.Title>Добавить ссылку</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label>Адрес ссылки</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={newLink.link}
+                    onChange={(e) => setNewLink({ ...newLink, link: e.target.value })}
+                    isInvalid={!!linkErrors.link}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {linkErrors.link}
+                  </Form.Control.Feedback>
+                </Form.Group>
 
-              <Form.Group>
-                <Form.Label>Описание</Form.Label>
-                <Form.Control
-                  as="textarea" rows={2}
-                  value={newDoc.description}
-                  onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
-                  isInvalid={!!fileErrors.description}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {fileErrors.description}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseAddDoc}>
-              Отменить
-            </Button>
-            <Button variant="primary" onClick={handleAddDocument}>
-              Добавить документ
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        <Modal show={showAddLinkModal} onHide={handleCloseAddLink}>
-          <Modal.Header>
-            <Modal.Title>Добавить ссылку</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Адрес ссылки</Form.Label>
-                <Form.Control
-                  type="url"
-                  placeholder="URL"
-                  value={newLink.link}
-                  onChange={(e) => setNewLink({ ...newLink, link: e.target.value })}
-                  isInvalid={!!linkErrors.link}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {linkErrors.link}
-                </Form.Control.Feedback>
-              </Form.Group>
-
-              <Form.Group>
-                <Form.Label>Описание</Form.Label>
-                <Form.Control
-                  as="textarea" rows={2}
-                  value={newLink.description}
-                  onChange={(e) => setNewLink({ ...newDoc, description: e.target.value })}
-                  isInvalid={!!linkErrors.description}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {linkErrors.description}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseAddLink}>
-              Отменить
-            </Button>
-            <Button variant="primary" onClick={handleAddLink}>
-              Добавить ссылку
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </Card.Body>
-    </Card>
+                <Form.Group>
+                  <Form.Label>Описание</Form.Label>
+                  <Form.Control
+                    as="textarea" rows={2}
+                    value={newLink.description}
+                    onChange={(e) => setNewLink({ ...newLink, description: e.target.value })}
+                    isInvalid={!!linkErrors.description}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {linkErrors.description}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleCloseAddLink}>
+                Отменить
+              </Button>
+              <Button variant="primary" onClick={handleAddLink}>
+                Добавить ссылку
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </Card.Body>
+      </Card>
+    </Layout>
   );
 };
 
