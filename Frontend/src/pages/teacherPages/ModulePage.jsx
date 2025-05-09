@@ -1,14 +1,7 @@
 import Layout from "../../components/Layout";
 import TestCard from "../../components/cards/TestCard";
 import TheoryCard from "../../components/cards/TheoryCard";
-
-import SingleChoiceQuestionEditor from "../../components/questionEditors/SingleChoiceQuestionEditor";
-import MultipleChoiceQuestionEditor from "../../components/questionEditors/MultipleChoiceQuestionEditor";
-import MatchingQuestionEditor from "../../components/questionEditors/MatchingQuestionEditor";
-import ShortAnswerQuestionEditor from "../../components/questionEditors/ShortAnswerQuestionEditor";
-
 import transformQuestionEditorToQuestion from "../../services/questionTransform";
-
 import CreateTestModal from "../../components/sidebars/CreateTestModal";
 import CreateTheoryModal from "../../components/sidebars/CreateTheoryModal";
 import {
@@ -33,6 +26,7 @@ import BaseQuestionEditor from "../../components/questionEditors/BaseQuestionEdi
 const ModulePage = () => {
   const [selectedType, setSelectedType] = useState(1);
   const [questions, setQuestions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const questionTypes = [
     "Вопрос с одним ответом",
     "Вопрос с несколькими ответами",
@@ -75,6 +69,7 @@ const ModulePage = () => {
         return { ...q, answer: JSON.parse(q.answer) };
       });
       setQuestions(recQuestions);
+      setIsLoading(false);
     }
     initQuestions();
   }, [moduleId, setQuestions]);
@@ -264,7 +259,7 @@ const ModulePage = () => {
                       data={questions.sort((a, b) => b.id - a.id)}
                       pageSizeOptions={[5, 10, 15]}
                       length={questions.length}
-                      isLoading={false}
+                      isLoading={isLoading}
                     >
                       <BaseQuestionViewer
                         onUpdate={handleUpdateQuestion}

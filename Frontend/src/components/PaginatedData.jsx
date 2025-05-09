@@ -7,7 +7,7 @@ const PaginatedData = ({
   columns,
   pageSizeOptions = [10, 25, 50],
   isLoading = false,
-  children,
+  children
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(pageSizeOptions[0]);
@@ -16,13 +16,13 @@ const PaginatedData = ({
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
   useEffect(() => {
-    if ((currentPage - 1) * itemsPerPage >= data.length){
+    if (!isLoading && (currentPage - 1) * itemsPerPage >= data.length){
         setCurrentPage(currentPage - 1);
     }
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     setPaginatedData(data.slice(startIndex, endIndex));
-  }, [data, currentPage, itemsPerPage, setCurrentPage]);
+  }, [data, currentPage, itemsPerPage, setCurrentPage, isLoading]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -87,7 +87,7 @@ const PaginatedData = ({
         columns,
         length,
         itemsPerPage,
-        currentPage
+        currentPage,
       })}
 
       <div className="d-flex justify-content-between align-items-center mt-3">

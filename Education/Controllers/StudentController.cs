@@ -3,6 +3,7 @@ using Education.DAL;
 using Education.DAL.Models;
 using Education.Extensions;
 using Education.Helpers;
+using Education.Models.QuestionAnswers;
 using Education.Models.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,8 +51,42 @@ public class StudentController(ApplicationContext context) : ControllerBase
                 Type = q.QuestionTypeId,
                 Body = q.Options
             })
+            .OrderByDescending(q => q.Id)
             .ToListAsync();
         return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadTest([FromBody] CheckTestResultRequest request)
+    {
+        double maxScore = 0;
+        double score = 0;
+        List<AnswerBase> answers = new();
+        foreach (var ans in request.Answers)
+        {
+            var question = await context.Questions.FindAsync(ans.Id);
+            if (question is null) continue;
+            maxScore += question.Weight;
+            var result = ScoreHelper.GetAnswer((QuestionTypeEnum)question.QuestionTypeId, question, ans.Answer);
+            answers.Add(result);
+            score += result.QuestionScore;
+        }
+
+        int grade = (score / maxScore) switch
+        {
+            >= 0.9 => 5,
+            >= 0.75 and < 0.9 => 4,
+            >= 0.6 and < 0.75 => 3,
+            _ => 2,
+        };
+        
+        return Ok(new
+        {
+            Score = $"{score:F}/{maxScore:F}",
+            Percent = (score / maxScore * 100).ToString("F") + "%",
+            Grade = grade,
+            Answers = answers,
+        });
     }
 
     [HttpPost]

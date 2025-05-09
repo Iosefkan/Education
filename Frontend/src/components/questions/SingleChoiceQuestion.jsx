@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, Badge, ListGroup, Form } from 'react-bootstrap';
 
 const SingleChoiceQuestion = ({
+  showId,
   questionId,
   questionText,
   options,
@@ -18,7 +19,7 @@ const SingleChoiceQuestion = ({
   return (
     <Card className="mb-4">
       <Card.Header className="bg-light d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">{questionText}</h5>
+        <h5 className="mb-0">Вопрос {showId}: {questionText}</h5>
         <Badge pill bg="secondary">
           Один ответ
         </Badge>

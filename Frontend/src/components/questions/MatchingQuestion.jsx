@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, Row, Col, Button, Badge } from 'react-bootstrap';
 
 const MatchingQuestion = ({
+  showId,
   questionId,
   questionText,
   leftItems,
@@ -55,7 +56,7 @@ const MatchingQuestion = ({
   return (
     <Card className="mb-4 shadow-sm">
       <Card.Header className="bg-light d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">{questionText}</h5>
+        <h5 className="mb-0">Вопрос {showId}: {questionText}</h5>
         <Badge pill bg="secondary">
           Соотнесение
         </Badge>

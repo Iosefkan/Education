@@ -11,7 +11,7 @@ export const getPracticalQuestions = async (practId) => {
 }
 
 export const getTestResult = async (answers) => {
-    const response = await axios.post('api/Student/TestResult', {
+    const response = await axios.post('api/Student/UploadTest', {
         answers
     });
     return response.data;

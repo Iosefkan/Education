@@ -11,7 +11,7 @@ const SingleChoiceQuestionViewer = ({
   questionWeight,
   answers,
   correctAnswerId,
-  id
+  id,
 }) => {
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -49,10 +49,10 @@ const SingleChoiceQuestionViewer = ({
                     variant={answer.id === correctAnswerId ? "success" : ""}
                     className="py-3"
                   >
-                    {answer.text}
                     {answer.id === correctAnswerId && (
-                      <span className="ms-2">✓</span>
+                      <span className="me-2">✓</span>
                     )}
+                    {answer.text}
                   </ListGroup.Item>
                 ))}
               </ListGroup>
@@ -71,7 +71,10 @@ const SingleChoiceQuestionViewer = ({
 
       {showEdit && (
         <SingleChoiceQuestionEditor
-          onSave={(data) => { onUpdate({...data, id}); setShowEdit(false);}}
+          onSave={(data) => {
+            onUpdate({ ...data, id });
+            setShowEdit(false);
+          }}
           initText={questionText}
           initAnswers={answers}
           initCorrectId={correctAnswerId}

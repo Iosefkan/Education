@@ -1,10 +1,6 @@
-import SingleChoiceQuestion from "../../components/questions/SingleChoiceQuestion";
-import MultipleChoiceQuestion from "../../components/questions/MultipleChoiceQuestion";
-import MatchingQuestion from "../../components/questions/MatchingQuestion";
-import ShortAnswerQuestion from "../../components/questions/ShortAnswerQuestion";
 import Layout from "../../components/Layout";
 import TaskCard from "../../components/cards/TaskCard";
-import { Button, Alert, Modal, Tab, Container, Col, Row, Nav } from "react-bootstrap";
+import { Button, Alert, Tab, Container, Col, Row, Nav } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
@@ -12,17 +8,21 @@ import {
   getTestResult,
 } from "../../services/student.service";
 import { getTasks } from "../../services/shared.service";
+import PaginatedData from "../../components/PaginatedData";
+import BaseQuestion from "../../components/questions/BaseQuestion";
+import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
 
 const UserPracticalPage = () => {
   const { state } = useLocation();
   const { practId, practTitle } = state;
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
+  const [isQuestionsLoading, setIsQuestionsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showResultModal, setShowResultModal] = useState(false);
-  const [result, setResult] = useState({ grade: 2, percent: 20 });
-    const [activeKey, setActiveKey] = useState("tasks");
-    const [tasks, setTasks] = useState([]);
+  const [isResult, setIsResult] = useState(false);
+  const [result, setResult] = useState({});
+  const [activeKey, setActiveKey] = useState("tasks");
+  const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
     async function InitQuestions() {
@@ -31,6 +31,7 @@ const UserPracticalPage = () => {
         return { ...q, body: JSON.parse(q.body) };
       });
       setQuestions(recQuestions);
+      setIsQuestionsLoading(false);
       setAnswers(
         recQuestions.map((q) => {
           return { id: q.id };
@@ -40,13 +41,13 @@ const UserPracticalPage = () => {
     InitQuestions();
   }, [practId, setQuestions, setAnswers]);
 
-    useEffect(() => {
-      async function InitTasks() {
-        let rec = await getTasks(practId);
-        setTasks(rec);
-      }
-      InitTasks();
-    }, [practId, setTasks]);
+  useEffect(() => {
+    async function InitTasks() {
+      let rec = await getTasks(practId);
+      setTasks(rec);
+    }
+    InitTasks();
+  }, [practId, setTasks]);
 
   const validate = () => {
     let newErrors = "";
@@ -61,7 +62,7 @@ const UserPracticalPage = () => {
     if (!validate()) return;
     const testResult = await getTestResult(answers);
     setResult(testResult);
-    setShowResultModal(true);
+    setIsResult(true);
   };
 
   return (
@@ -110,82 +111,42 @@ const UserPracticalPage = () => {
                       {error}
                     </Alert>
                   )}
-                  <Button
-                    className="w-100 mb-5"
-                    style={{ height: "65px" }}
-                    onClick={checkResult}
-                  >
-                    Проверить результат
-                  </Button>
+                  {isResult && (
+                    <h3>
+                      <br />
+                      Оценка за тест: {result.grade}
+                      <br />
+                      Выполнено: {result.score}, {result.percent}
+                    </h3>
+                  )}
+                  {!isResult && (
+                    <Button
+                      className="w-100 mb-5"
+                      style={{ height: "65px" }}
+                      onClick={checkResult}
+                    >
+                      Проверить результат
+                    </Button>
+                  )}
 
-                  {questions.map((option) =>
-                    option.type == 1 ? (
-                      <SingleChoiceQuestion
-                        key={option.id}
-                        questionId={option.id}
-                        questionText={option.text}
-                        options={option.body.options}
-                        isReadonly={false}
-                        onSelect={(ans) =>
-                          setAnswers(
-                            answers.map((a) =>
-                              a.id === option.id ? { ...a, answer: ans } : a
-                            )
-                          )
-                        }
-                      />
-                    ) : option.type == 2 ? (
-                      <MultipleChoiceQuestion
-                        key={option.id}
-                        questionId={option.id}
-                        questionText={option.text}
-                        options={option.body.options}
-                        isReadonly={false}
-                        onSelect={(ans) =>
-                          setAnswers(
-                            answers.map((a) =>
-                              a.id === option.id
-                                ? { ...a, answer: JSON.stringify(ans) }
-                                : a
-                            )
-                          )
-                        }
-                      />
-                    ) : option.type == 3 ? (
-                      <MatchingQuestion
-                        key={option.id}
-                        questionId={option.id}
-                        questionText={option.text}
-                        leftItems={option.body.leftItems}
-                        rightItems={option.body.rightItems}
-                        isReadonly={false}
-                        onMatch={(ans) =>
-                          setAnswers(
-                            answers.map((a) =>
-                              a.id === option.id
-                                ? { ...a, answer: JSON.stringify(ans) }
-                                : a
-                            )
-                          )
-                        }
-                      />
-                    ) : option.type == 4 ? (
-                      <ShortAnswerQuestion
-                        key={option.id}
-                        questionId={option.id}
-                        questionText={option.text}
-                        isReadonly={false}
-                        onSave={(ans) =>
-                          setAnswers(
-                            answers.map((a) =>
-                              a.id === option.id ? { ...a, answer: ans } : a
-                            )
-                          )
-                        }
-                      />
-                    ) : (
-                      <></>
-                    )
+                  {!isResult && (
+                    <PaginatedData
+                      isLoading={isQuestionsLoading}
+                      length={questions.length}
+                      data={questions}
+                      pageSizeOptions={[5, 10, 15]}
+                    >
+                      <BaseQuestion setAnswers={setAnswers} answers={answers} />
+                    </PaginatedData>
+                  )}
+                  {isResult && (
+                    <PaginatedData
+                      length={result.answers.length}
+                      data={result.answers}
+                      pageSizeOptions={[5, 10, 15]}
+                    >
+                      <BaseAnswer />
+                    </PaginatedData>
                   )}
 
                   {error && (
@@ -193,29 +154,18 @@ const UserPracticalPage = () => {
                       {error}
                     </Alert>
                   )}
-                  <Button
-                    className={error ? "w-100" : "w-100 mt-5"}
-                    style={{ height: "65px" }}
-                    onClick={checkResult}
-                  >
-                    Проверить результат
-                  </Button>
-
-                  <Modal
-                    show={showResultModal}
-                    onHide={() => setShowResultModal(false)}
-                  >
-                    <Modal.Header closeButton>
-                      <Modal.Title>Результат теста</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                      Вы - большой молодец!!!
-                      <br />
-                      Ваша оценка за тест - {result.grade}
-                      <br />
-                      Выполнено {result.score}, {result.percent}
-                    </Modal.Body>
-                  </Modal>
+                  {!isResult && (
+                    <Button
+                      className="w-100 my-5"
+                      style={{ height: "65px" }}
+                      onClick={checkResult}
+                    >
+                      Проверить результат
+                    </Button>
+                  )}
+                  {isResult && (
+                    <div className="mb-5"></div>
+                  )}
                 </Tab.Pane>
               </Tab.Content>
             </Col>
