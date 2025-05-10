@@ -1,10 +1,17 @@
-import { useState } from 'react';
-import { Card, Dropdown, Modal, Button } from 'react-bootstrap';
-import { ThreeDotsVertical } from 'react-bootstrap-icons';
-import { useNavigate } from 'react-router-dom';
-import '../../css/card.css';
+import { useState } from "react";
+import { Card, Dropdown, Modal, Button } from "react-bootstrap";
+import { ThreeDotsVertical } from "react-bootstrap-icons";
+import { useNavigate } from "react-router-dom";
+import "../../css/card.css";
 
-const TaskCard = ({ id, title, canDelete = false, onDelete, isStudent = false }) => {
+const TaskCard = ({
+  id,
+  title,
+  isAccepted = false,
+  canDelete = false,
+  onDelete,
+  isStudent = false,
+}) => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -13,41 +20,48 @@ const TaskCard = ({ id, title, canDelete = false, onDelete, isStudent = false })
     onDelete();
   };
 
-  const onClick = () => { 
-    navigate(isStudent ? '/task' : '/makeTask', { state: { taskId: id,  taskTitle: title }});
+  const onClick = () => {
+    navigate(isStudent ? "/task" : "/makeTask", {
+      state: { taskId: id, taskTitle: title },
+    });
   };
 
   return (
     <>
-      <Card onClick={onClick} className="mb-3 shadow-sm" style={{ width: '350px', height: '150px', cursor: 'pointer' }}>
+      <Card
+        onClick={onClick}
+        className="mb-3 shadow-sm"
+        style={{ width: "350px", height: "150px", cursor: "pointer" }}
+      >
         <Card.Header className="h-100 d-flex justify-content-between align-items-center">
-          <Card.Title className="mb-0 text-wrap">{title}</Card.Title>
-          {canDelete && (<div onClick={e => e.stopPropagation()}>
-            <Dropdown>
-                <Dropdown.Toggle 
-                variant="link" 
-                id="dropdown-menu" 
-                className="p-0"
+          <Card.Title className="mb-0 text-wrap">
+            {title}
+            {isStudent && isAccepted && <span className="text-primary"> (выполнено)</span>}
+          </Card.Title>
+          {canDelete && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <Dropdown>
+                <Dropdown.Toggle
+                  variant="link"
+                  id="dropdown-menu"
+                  className="p-0"
                 >
-                <ThreeDotsVertical />
+                  <ThreeDotsVertical />
                 </Dropdown.Toggle>
 
-
                 <Dropdown.Menu>
-                <Dropdown.Item 
+                  <Dropdown.Item
                     onClick={() => setShowDeleteModal(true)}
                     className="text-danger"
-                >
+                  >
                     Удалить
-                </Dropdown.Item>
+                  </Dropdown.Item>
                 </Dropdown.Menu>
-            </Dropdown>
-          </div>)}
-
+              </Dropdown>
+            </div>
+          )}
         </Card.Header>
       </Card>
-
-
 
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>

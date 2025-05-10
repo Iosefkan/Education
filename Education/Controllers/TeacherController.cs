@@ -1,8 +1,10 @@
+using System.Text.Json;
 using Education.Consts;
 using Education.DAL;
 using Education.DAL.Models;
 using Education.Extensions;
 using Education.Helpers;
+using Education.Models.QuestionAnswers;
 using Education.Models.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +18,36 @@ namespace Education.Controllers;
 public class TeacherController(ApplicationContext context) : ControllerBase
 {
     [HttpGet]
+    public async Task<IActionResult> GetUserProtocols(long practicalId)
+    {
+        var result = await context.TestResults
+            .Include(tr => tr.User)
+            .AsNoTracking()
+            .Where(tr => tr.PracticalMaterialId == practicalId)
+            .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore})
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetTestProtocol(long practicalId, long userId)
+    {
+        var testResult = await context.TestResults.Where(tr => tr.UserId == userId && tr.PracticalMaterialId == practicalId).FirstOrDefaultAsync();
+        if (testResult is null) return NotFound();
+        
+        JsonSerializerOptions options = new() { AllowOutOfOrderMetadataProperties = true };
+        var answersDb = await context.Answers
+            .AsNoTracking()
+            .Where(a => a.TestResultId == testResult.Id)
+            .ToListAsync();
+        
+        var answers = answersDb
+            .Select(a => JsonSerializer.Deserialize<AnswerBase>(a.Answers, options)).ToList();
+            
+        return Ok(new { Answers = answers, testResult.Score, testResult.MaxScore });
+    }
+    
+    [HttpGet]
     public async Task<IActionResult> GetPracticals(long moduleId)
     {
         var result = await context.PracticalMaterials
@@ -26,13 +58,14 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         return Ok(result);
     }
     
+    
     [HttpGet]
-    public async Task<IActionResult> GetTaskFileComments(long taskFileId)
+    public async Task<IActionResult> GetTasks(long practicalId)
     {
-        var result = await context.CaseFileComments
+        var result = await context.Cases
             .AsNoTracking()
-            .Where(cfc => cfc.CaseFileId == taskFileId)
-            .Select(cfc => new {cfc.Id, cfc.Created, cfc.Text})
+            .Where(c => c.PracticalMaterialId == practicalId)
+            .Select(c => new { c.Id, c.Name, c.Text })
             .ToListAsync();
         return Ok(result);
     }
@@ -42,9 +75,11 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     {
         var result = await context.CaseFiles
             .Include(cf => cf.User)
+            .Include(cf => cf.Comments)
             .AsNoTracking()
             .Where(cf => cf.CaseId == taskId)
-            .Select(cf => new { cf.Path, Name = cf.Path.GetPublicFileName(), cf.UserId, FullName = cf.User.GetFullName() })
+            .Select(cf => new { cf.Id, cf.Path, Name = cf.Path.GetPublicFileName(), cf.UserId, FullName = cf.User.GetFullName(), IsAccepted = cf.IsAccepted,
+                Comments = cf.Comments.OrderByDescending(c => c.Id).Select(c => new { c.Id, c.IsGenerated, c.Text, c.Created }) })
             .ToListAsync();
         return Ok(result);
     }
@@ -276,6 +311,16 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         return Ok();
     }
 
+    [HttpPut]
+    public async Task<IActionResult> AcceptTaskFile(long taskFileId)
+    {
+        var taskFile = await context.CaseFiles.FirstOrDefaultAsync(f => f.Id == taskFileId);
+        if (taskFile is null) return BadRequest();
+        taskFile.IsAccepted = true;
+        await context.SaveChangesAsync();
+        return Ok();
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateModule([FromBody] AddModuleRequest request)
     {
@@ -313,7 +358,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         };
         await context.CaseFileComments.AddAsync(comment);
         await context.SaveChangesAsync();
-        return Ok(new { comment.Id, comment.Text, comment.Created });
+        return Ok(new { comment.Id, comment.Text, comment.Created, comment.IsGenerated });
     }
 
     [HttpPost]
@@ -405,8 +450,6 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         await context.SaveChangesAsync();
         return Ok(new { link.Id, link.Description, link.Link });
     }
-
-
 
     [HttpDelete]
     public async Task<IActionResult> DeleteCourse(long courseId)

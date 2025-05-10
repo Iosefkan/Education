@@ -69,6 +69,7 @@ public class StudentController(ApplicationContext context) : ControllerBase
 
         JsonSerializerOptions options = new() { AllowOutOfOrderMetadataProperties = true };
         var answersDb = await context.Answers
+                .AsNoTracking()
                 .Where(a => a.TestResultId == testResult.Id)
                 .ToListAsync();
         
@@ -134,10 +135,11 @@ public class StudentController(ApplicationContext context) : ControllerBase
         var comments = await context.CaseFileComments
             .AsNoTracking()
             .Where(cfc => cfc.CaseFileId == taskFile.Id && !cfc.IsGenerated)
+            .OrderByDescending(cfc => cfc.Id)
             .Select(cfc => new {cfc.Id, cfc.Created, cfc.Text})
             .ToListAsync();
         
-        return Ok(new { taskFile.Path, taskFile.Id, Name = taskFile.Path.GetPublicFileName(), Comments = comments });
+        return Ok(new { taskFile.Path, taskFile.Id, Name = taskFile.Path.GetPublicFileName(), Comments = comments, taskFile.IsAccepted });
     }
 
     [HttpPut]
@@ -148,9 +150,10 @@ public class StudentController(ApplicationContext context) : ControllerBase
         if (login is null) return Unauthorized();
         var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
         var taskFile = await context.CaseFiles
-            .AsNoTracking()
             .FirstOrDefaultAsync(cf => cf.UserId == userId && cf.CaseId == request.TaskId);
-
+        
+        if (taskFile is not null && taskFile.IsAccepted) return BadRequest();
+        
         string comment;
         if (taskFile is not null)
         {
@@ -178,7 +181,7 @@ public class StudentController(ApplicationContext context) : ControllerBase
         await context.CaseFileComments.AddAsync(taskFileComment);
         await context.SaveChangesAsync();
         
-        return Ok(new { taskFile.Id, taskFile.Path, Name = taskFile.Path.GetPublicFileName() });
+        return Ok(new { taskFile.Id, taskFile.Path, Name = taskFile.Path.GetPublicFileName(), taskFile.IsAccepted });
     }
     
     [HttpGet]
@@ -188,6 +191,23 @@ public class StudentController(ApplicationContext context) : ControllerBase
             .AsNoTracking()
             .Where(m => m.ModuleId == moduleId && m.IsPublic)
             .Select(m => new { m.Id, m.Name })
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    
+    [HttpGet]
+    public async Task<IActionResult> GetTasks(long practicalId)
+    {
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        
+        var result = await context.Cases
+            .Include(c => c.CaseFiles)
+            .AsNoTracking()
+            .Where(c => c.PracticalMaterialId == practicalId)
+            .Select(c => new { c.Id, c.Name, c.Text, IsAccepted = c.CaseFiles.Any(cf => cf.UserId == userId && cf.IsAccepted)})
             .ToListAsync();
         return Ok(result);
     }

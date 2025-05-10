@@ -2,8 +2,18 @@ import AccordionMultiSelect from "../../components/AccordionMutiSelect";
 import Layout from "../../components/Layout";
 import TaskCard from "../../components/cards/TaskCard";
 import CreateTaskModal from "../../components/sidebars/CreateTaskModal";
-import { Alert, Button, Tab, Nav, Container, Row, Col } from "react-bootstrap";
-import { useLocation } from "react-router-dom";
+import {
+  Alert,
+  Button,
+  Tab,
+  Nav,
+  Container,
+  Row,
+  Col,
+  ListGroup,
+  Card,
+} from "react-bootstrap";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   getPractAllQuestion,
@@ -11,19 +21,23 @@ import {
   createTask,
   deleteTask,
   setPublic,
+  getTasks,
+  getUserProtocols,
 } from "../../services/teacher.service";
-import { getTasks } from "../../services/shared.service";
+import getGrade from "../../services/gradingHelper";
 
 const MakePracticalPage = () => {
   const { state } = useLocation();
   const { practId, practTitle, moduleId } = state;
   const [selectedIds, setSelectedIds] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [userProtocols, setUserProtocols] = useState([]);
   const [isPublic, setIsPublic] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState({});
   const [activeKey, setActiveKey] = useState("tasks");
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function InitQuestions() {
@@ -44,6 +58,15 @@ const MakePracticalPage = () => {
     }
     InitTasks();
   }, [practId, setTasks]);
+
+  useEffect(() => {
+    async function InitProtocols() {
+      if (!isPublic) return;
+      const rec = await getUserProtocols(practId);
+      setUserProtocols(rec);
+    }
+    InitProtocols();
+  }, [isPublic, practId, setUserProtocols]);
 
   const handleUpdateTestQuestions = async () => {
     const result = await updatePractQuestions(practId, selectedIds);
@@ -75,6 +98,12 @@ const MakePracticalPage = () => {
     setTasks(tasks.filter((m) => m.id !== taskData.id));
   };
 
+  const handleSelectProtocol = (userId, username) => {
+    navigate("/testProtocol", {
+      state: { userId, username, practName: practTitle, practId },
+    });
+  };
+
   return (
     <Layout>
       <Container fluid className="mt-5">
@@ -88,6 +117,13 @@ const MakePracticalPage = () => {
                 <Nav.Item>
                   <Nav.Link eventKey="test">Составление теста</Nav.Link>
                 </Nav.Item>
+                {isPublic && (
+                  <Nav.Item>
+                    <Nav.Link eventKey="protocol">
+                      Протоколы тестирования
+                    </Nav.Link>
+                  </Nav.Item>
+                )}
               </Nav>
             </Col>
             <Col sm={10}>
@@ -156,6 +192,40 @@ const MakePracticalPage = () => {
                     onSelectionChange={(selected) => setSelectedIds(selected)}
                   />
                 </Tab.Pane>
+                {isPublic && (
+                  <Tab.Pane eventKey="protocol">
+                    <ListGroup>
+                      {userProtocols.map((prot) => (
+                        <Card
+                          key={prot.id}
+                          className="hover-overlay"
+                          style={{ cursor: "pointer" }}
+                          onClick={() =>
+                            handleSelectProtocol(prot.userId, prot.name)
+                          }
+                        >
+                          <Card.Header className="mb-0">
+                            <Card.Title>
+                              Выполнивший студент: {prot.name}
+                            </Card.Title>
+                          </Card.Header>
+                          <Card.Body>
+                            Оценка за тест:{" "}
+                            {getGrade(prot.score, prot.maxScore)}
+                            <br />
+                            Выполнено: {prot.score.toFixed(2)}/
+                            {prot.maxScore.toFixed(2)},{" "}
+                            {((prot.score / prot.maxScore) * 100).toFixed(2)}%
+                          </Card.Body>
+                        </Card>
+                      ))}
+                      {!userProtocols ||
+                        (userProtocols.length === 0 && (
+                          <h5>Нет выполневший тест стедентов</h5>
+                        ))}
+                    </ListGroup>
+                  </Tab.Pane>
+                )}
               </Tab.Content>
             </Col>
           </Row>

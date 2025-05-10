@@ -80,7 +80,12 @@ const BorderlessAccordion = () => {
     <Layout>
       <Card className="shadow-lg">
         <Card.Header className="bg-light">
-          <h2>{taskTitle}</h2>
+          <h2>
+            {taskTitle}
+            {task?.isAccepted && (
+              <span className="text-primary"> (выполнено)</span>
+            )}
+          </h2>
         </Card.Header>
 
         <Card.Body>
@@ -96,7 +101,7 @@ const BorderlessAccordion = () => {
                 }`}
             </style>
             <Accordion.Item eventKey={"0"} className="border-0">
-              <Accordion.Header className="p-3 border-bottom">
+              <Accordion.Header className="p-0 border-bottom">
                 <div className="d-flex justify-content-between align-items-center w-100">
                   <h5 className="mb-0">Текст задания</h5>
                 </div>
@@ -145,14 +150,16 @@ const BorderlessAccordion = () => {
                         {task && <a href={task.path}>{task.name}</a>}
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline-danger"
-                      onClick={handleDelete}
-                      disabled={!task}
-                    >
-                      <Trash />
-                    </Button>
+                    {task && !task.isAccepted && (
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        onClick={handleDelete}
+                        disabled={!task && !selectedFile}
+                      >
+                        <Trash />
+                      </Button>
+                    )}
                   </Stack>
 
                   {!task && selectedFile && (
@@ -167,7 +174,9 @@ const BorderlessAccordion = () => {
               )}
             </Form>
           </div>
+
           <ListGroup className="d-flex align-items-center">
+            <h5 className="my-3">Комментарии преподавателя:</h5>
             {comments.map((comment) => (
               <MessageBubble
                 key={comment.id}
@@ -175,6 +184,7 @@ const BorderlessAccordion = () => {
                 timestamp={comment.created}
               />
             ))}
+            {comments.length === 0 && <div>Нет комментариев</div>}
           </ListGroup>
         </Card.Body>
       </Card>

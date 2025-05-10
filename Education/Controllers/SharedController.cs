@@ -68,17 +68,6 @@ public class SharedController(ApplicationContext context) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTasks(long practicalId)
-    {
-        var result = await context.Cases
-            .AsNoTracking()
-            .Where(c => c.PracticalMaterialId == practicalId)
-            .Select(c => new { c.Id, c.Name, c.Text })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
     public async Task<IActionResult> GetTaskText(long taskId)
     {
         var task = await context.Cases

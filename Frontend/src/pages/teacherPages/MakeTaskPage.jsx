@@ -1,11 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Accordion, Button, Card, Alert } from 'react-bootstrap';
-import { FileWord, BodyText } from 'react-bootstrap-icons';
+import { useState, useEffect } from "react";
+import { Accordion, Button, Card, Alert } from "react-bootstrap";
+import { FileWord, BodyText } from "react-bootstrap-icons";
 import { useLocation } from "react-router-dom";
-import RichTextEditor from '../../components/RichTextEditor';
-import { getTaskFiles, updateTaskText } from '../../services/teacher.service';
+import RichTextEditor from "../../components/RichTextEditor";
+import {
+  getTaskFiles,
+  updateTaskText,
+  createComment,
+  setAccepted,
+} from "../../services/teacher.service";
 import { getTaskText } from "../../services/shared.service";
-import Layout from '../../components/Layout';
+import Layout from "../../components/Layout";
+import FileWithComments from "../../components/FileWithComments";
 
 const MakeTheoryMaterialPage = () => {
   const { state } = useLocation();
@@ -13,36 +19,59 @@ const MakeTheoryMaterialPage = () => {
 
   const [taskFiles, setTaskFiles] = useState([]);
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [saveMessage, setSaveMessage] = useState({});
 
   useEffect(() => {
-    async function initTaskFiles(){
-        const rec = await getTaskFiles(taskId);
-        setTaskFiles(rec)
+    async function initTaskFiles() {
+      const rec = await getTaskFiles(taskId);
+      setTaskFiles(rec);
     }
     initTaskFiles();
-  }, [taskId, setTaskFiles])
+  }, [taskId, setTaskFiles]);
 
   useEffect(() => {
-    async function initText(){
-        const recText = await getTaskText(taskId);
-        setContent(recText)
+    async function initText() {
+      const recText = await getTaskText(taskId);
+      setContent(recText);
     }
     initText();
-  }, [taskId, setContent])
+  }, [taskId, setContent]);
+
+  const handleAddComment = async (taskFileId, comment) => {
+    const result = await createComment(taskFileId, comment);
+    setTaskFiles(
+      taskFiles.map((file) => {
+        if (file.id === taskFileId) {
+          file.comments.unshift(result);
+        }
+        return file;
+      })
+    );
+  };
 
   const handleUpdateText = async () => {
     const result = await updateTaskText(taskId, content);
     if (!result) {
-      setSaveMessage({ isError: true, message: 'Ошибка при обновлении задания'})
-    }
-    else {
-      setSaveMessage({ isError: false, message: 'Задание успешно обновлена'})
+      setSaveMessage({
+        isError: true,
+        message: "Ошибка при обновлении задания",
+      });
+    } else {
+      setSaveMessage({ isError: false, message: "Задание успешно обновлена" });
     }
 
     setTimeout(() => setSaveMessage({}), 5000);
-  }
+  };
+
+  const handleAcceptTaskFile = async (taskFileId) => {
+    await setAccepted(taskFileId);
+    setTaskFiles(
+      taskFiles.map((file) =>
+        file.id === taskFileId ? { ...file, isAccepted: true } : file
+      )
+    );
+  };
 
   return (
     <Layout>
@@ -52,25 +81,25 @@ const MakeTheoryMaterialPage = () => {
         </Card.Header>
 
         <Card.Body>
-          <Accordion defaultActiveKey={['0']} alwaysOpen>
-          <Accordion.Item eventKey="0">
+          <Accordion defaultActiveKey={["0"]} alwaysOpen>
+            <Accordion.Item eventKey="0">
               <Accordion.Header>
-                <BodyText className="p-3 border-0" /> Текст задания
+                <BodyText className="me-2" /> Текст задания
               </Accordion.Header>
               <Accordion.Body>
                 {saveMessage.message && (
-                  <Alert variant={saveMessage.isError ? "danger" : "success"} className="mt-3">
+                  <Alert
+                    variant={saveMessage.isError ? "danger" : "success"}
+                    className="mt-3"
+                  >
                     {saveMessage.message}
                   </Alert>
                 )}
-                <Button 
-                  className="mb-3"
-                  onClick={() => handleUpdateText()}
-                >
+                <Button className="mb-3" onClick={() => handleUpdateText()}>
                   Сохранить текст задания
                 </Button>
-                <RichTextEditor 
-                  value={content} 
+                <RichTextEditor
+                  value={content}
                   onChange={(value) => setContent(value)}
                   placeholder="Текст задания..."
                 />
@@ -79,18 +108,18 @@ const MakeTheoryMaterialPage = () => {
 
             <Accordion.Item eventKey="1">
               <Accordion.Header>
-                <FileWord className="me-2" /> Выполненные задания ({taskFiles.length})
+                <FileWord className="me-2" /> Выполненные задания (
+                {taskFiles.length})
               </Accordion.Header>
               <Accordion.Body>
                 {taskFiles.map((file) => (
-                  <div key={file.id} className="mb-3 d-flex align-items-center gap-2">
-                    <div className="flex-grow-1">
-                      <div className="fw-bold">Выполнивший студент: {file.fullName}</div>
-                      <a href={file.path}>{file.name}</a>
-                    </div>
-                  </div>
+                  <FileWithComments
+                    key={file.id}
+                    file={file}
+                    onAddComment={handleAddComment}
+                    onAccept={() => handleAcceptTaskFile(file.id)}
+                  />
                 ))}
-            
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>

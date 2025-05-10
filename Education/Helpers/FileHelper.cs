@@ -8,7 +8,7 @@ public static class FileHelper
     public static async Task<string> SaveFileToPublic(IFormFile file)
     {
         var dotIndex = file.FileName.LastIndexOf('.');
-        var fileBase = file.FileName.Substring(0, dotIndex - 1);
+        var fileBase = file.FileName.Substring(0, dotIndex);
         var fileExt = file.FileName.Substring(dotIndex);
         var fileName = fileBase + "_" + Guid.NewGuid().ToString() + fileExt;
         var physName = Path.Combine("Files", fileName);

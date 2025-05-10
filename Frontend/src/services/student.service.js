@@ -35,3 +35,8 @@ export const getTests = async (moduleId) => {
     const response = await axios.get(`api/Student/GetPracticals?moduleId=${moduleId}`);
     return response.data;
 };
+
+export const getTasks = async (practicalId) => {
+    const response = await axios.get(`api/Student/GetTasks?practicalId=${practicalId}`);
+    return response.data;
+}

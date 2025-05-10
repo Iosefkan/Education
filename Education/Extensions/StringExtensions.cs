@@ -8,7 +8,7 @@ public static class StringExtensions
         ArgumentNullException.ThrowIfNullOrWhiteSpace(str, nameof(str));
         var dotInd = str.LastIndexOf('.');
         var fileExt = str.Substring(dotInd);
-        var fileBase = str.Substring(0, dotInd - 1);
+        var fileBase = str.Substring(0, dotInd);
         var undInd = fileBase.LastIndexOf('_');
         var slashInd = fileBase.IndexOf(Path.DirectorySeparatorChar);
         var fileName = fileBase.Substring(slashInd + 1, undInd - slashInd - 1);

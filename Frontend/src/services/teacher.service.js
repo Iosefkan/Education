@@ -227,3 +227,22 @@ export const createComment = async (taskFileId, comment) => {
 export const setPublic = async (practicalId) => {
     await axios.put(`api/Teacher/MakePracticalPublic?practicalId=${practicalId}`)
 }
+
+export const setAccepted = async (taskFileId) => {
+    await axios.put(`api/Teacher/AcceptTaskFile?taskFileId=${taskFileId}`);
+}
+
+export const getTasks = async (practicalId) => {
+    const response = await axios.get(`api/Teacher/GetTasks?practicalId=${practicalId}`);
+    return response.data;
+}
+
+export const getTestProtocol = async (practicalId, userId) => {
+    const response = await axios.get(`api/Teacher/GetTestProtocol?practicalId=${practicalId}&userId=${userId}`);
+    return response.data;
+}
+
+export const getUserProtocols = async (practicalId) => {
+    const response = await axios.get(`api/Teacher/GetUserProtocols?practicalId=${practicalId}`);
+    return response.data;
+}

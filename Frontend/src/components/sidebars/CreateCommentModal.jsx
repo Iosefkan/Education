@@ -7,7 +7,7 @@ const CreateCommentModal = ({ show, onHide, onCreate }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!comment.trim()) newErrors.title = 'Введите комментарий';
+    if (!comment.trim()) newErrors.comment = 'Введите комментарий';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -29,7 +29,7 @@ const CreateCommentModal = ({ show, onHide, onCreate }) => {
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Создание новой практики</Modal.Title>
+        <Modal.Title>Добавление комментария</Modal.Title>
       </Modal.Header>
       
       <Form onSubmit={handleSubmit}>
@@ -40,10 +40,10 @@ const CreateCommentModal = ({ show, onHide, onCreate }) => {
               style={{ height: '100px' }}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              isInvalid={!!errors.title}
+              isInvalid={!!errors.comment}
             />
             <Form.Control.Feedback type="invalid">
-              {errors.title}
+              {errors.comment}
             </Form.Control.Feedback>
           </FloatingLabel>
         </Modal.Body>

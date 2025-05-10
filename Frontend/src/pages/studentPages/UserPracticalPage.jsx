@@ -6,8 +6,8 @@ import { useState, useEffect } from "react";
 import {
   getPracticalQuestions,
   getTestResult,
+  getTasks
 } from "../../services/student.service";
-import { getTasks } from "../../services/shared.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
 import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
@@ -28,7 +28,6 @@ const UserPracticalPage = () => {
   useEffect(() => {
     async function InitQuestions() {
       let rec = await getPracticalQuestions(practId);
-      console.log(rec);
       setIsResult(rec.isCompleted);
       if (!rec.isCompleted){
         rec = rec.questions.map((q) => {
@@ -103,6 +102,7 @@ const UserPracticalPage = () => {
                         key={task.id}
                         id={task.id}
                         title={task.name}
+                        isAccepted={task.isAccepted}
                         canDelete={false}
                         isStudent={true}
                       />
@@ -124,7 +124,7 @@ const UserPracticalPage = () => {
                       <br />
                       Оценка за тест: {getGrade(result.score, result.maxScore)}
                       <br />
-                      Выполнено: {result.score.toFixed(2)}/{result.maxScore.toFixed(2)}, {(result.score / result.maxScore).toFixed(2)}%
+                      Выполнено: {result.score.toFixed(2)}/{result.maxScore.toFixed(2)}, {((result.score / result.maxScore) * 100).toFixed(2)}%
                     </h3>
                   )}
                   {!isResult && (

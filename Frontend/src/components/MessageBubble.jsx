@@ -32,7 +32,7 @@ const MessageBubble = ({
         ...style 
       }}
     >
-      <Card.Header className="d-flex justify-content-between align-items-center bg-transparent border-bottom-0">
+      <Card.Header className="d-flex justify-content-between align-items-center bg-transparent border-bottom-0 mb-0 pb-0">
         <div >
         </div>
         <Badge pill bg={variant} text={variant === 'light' ? 'dark' : 'white'}>
