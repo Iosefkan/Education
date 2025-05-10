@@ -14,4 +14,9 @@ public class CaseFile
     [Column("user_id")]
     public long UserId { get; set; }
     public User User { get; set; }
+    
+    [Column("is_accepted")]
+    public bool IsAccepted { get; set; }
+    
+    public List<CaseFileComment> Comments { get; set; }
 }

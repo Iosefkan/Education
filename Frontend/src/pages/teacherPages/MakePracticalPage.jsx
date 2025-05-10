@@ -6,8 +6,11 @@ import { Alert, Button, Tab, Nav, Container, Row, Col } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
-  getPractAllQuestion, updatePractQuestions,
-  createTask, deleteTask
+  getPractAllQuestion,
+  updatePractQuestions,
+  createTask,
+  deleteTask,
+  setPublic,
 } from "../../services/teacher.service";
 import { getTasks } from "../../services/shared.service";
 
@@ -16,6 +19,7 @@ const MakePracticalPage = () => {
   const { practId, practTitle, moduleId } = state;
   const [selectedIds, setSelectedIds] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [isPublic, setIsPublic] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState({});
@@ -24,13 +28,14 @@ const MakePracticalPage = () => {
   useEffect(() => {
     async function InitQuestions() {
       let recQuestions = await getPractAllQuestion(moduleId, practId);
-      recQuestions = recQuestions.map((q) => {
+      setIsPublic(recQuestions.isPublic);
+      recQuestions = recQuestions.questions.map((q) => {
         return { ...q, body: JSON.parse(q.body) };
       });
       setQuestions(recQuestions);
     }
     InitQuestions();
-  }, [moduleId, practId, setQuestions]);
+  }, [moduleId, practId, setQuestions, setIsPublic]);
 
   useEffect(() => {
     async function InitTasks() {
@@ -56,13 +61,19 @@ const MakePracticalPage = () => {
 
   const handleCreateTask = async (taskData) => {
     const newTask = await createTask(practId, taskData.name);
-    setTasks([...tasks, newTask])
-  }
+    setTasks([...tasks, newTask]);
+  };
+
+  const handleSetPublic = async () => {
+    handleUpdateTestQuestions();
+    await setPublic(practId);
+    setIsPublic(true);
+  };
 
   const handleDeleteTask = async (taskData) => {
     await deleteTask(taskData.id);
-    setTasks(tasks.filter(m => m.id !== taskData.id))
-  }
+    setTasks(tasks.filter((m) => m.id !== taskData.id));
+  };
 
   return (
     <Layout>
@@ -84,16 +95,17 @@ const MakePracticalPage = () => {
                 <Tab.Pane eventKey="tasks">
                   <div className="mb-5 d-flex flex-row align-items-center gap-5">
                     <h1>Практический материал "{practTitle}"</h1>
-                    <Button variant="outline-primary" onClick={() => setShowTaskModal(true)}>
-                        Добавить задание
+                    <Button
+                      variant="outline-primary"
+                      onClick={() => setShowTaskModal(true)}
+                    >
+                      Добавить задание
                     </Button>
                   </div>
 
                   <h3 className="mb-3">Созданные задания:</h3>
                   <div className="d-flex flex-wrap justify-content-start align-items-center gap-4">
-                    {tasks.length === 0 && (
-                        <div>Нет заданий</div>
-                    )}
+                    {tasks.length === 0 && <div>Нет заданий</div>}
                     {tasks.map((task) => (
                       <TaskCard
                         key={task.id}
@@ -101,7 +113,7 @@ const MakePracticalPage = () => {
                         title={task.name}
                         canDelete={true}
                         onDelete={() => handleDeleteTask(task)}
-                        />
+                      />
                     ))}
                   </div>
 
@@ -123,14 +135,23 @@ const MakePracticalPage = () => {
                       {saveMessage.message}
                     </Alert>
                   )}
-                  <Button
-                    className="mb-3"
-                    onClick={() => handleUpdateTestQuestions()}
-                  >
-                    Сохранить изменения
-                  </Button>
+                  {!isPublic && (
+                    <div className="d-flex justify-content-start mb-3 gap-3">
+                      <Button onClick={() => handleUpdateTestQuestions()}>
+                        Сохранить изменения
+                      </Button>
+                      <Button onClick={() => handleSetPublic()}>
+                        Сохранить изменения и завершить
+                      </Button>
+                    </div>
+                  )}
+                  {isPublic && (
+                    <h5 className="mb-3">Создание теста завершено</h5>
+                  )}
+
                   <AccordionMultiSelect
                     className="mb-10"
+                    isReadonly={isPublic}
                     options={questions}
                     onSelectionChange={(selected) => setSelectedIds(selected)}
                   />

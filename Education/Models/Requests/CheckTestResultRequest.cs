@@ -6,6 +6,8 @@ public class CheckTestResultRequest
 {
     [Required]
     public List<AnswerModel> Answers { get; set; }
+    [Required]
+    public long PracticalId { get; set; }
 }
 
 public class AnswerModel

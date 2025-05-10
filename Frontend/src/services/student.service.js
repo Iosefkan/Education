@@ -10,9 +10,10 @@ export const getPracticalQuestions = async (practId) => {
     return response.data;
 }
 
-export const getTestResult = async (answers) => {
+export const getTestResult = async (answers, practicalId) => {
     const response = await axios.post('api/Student/UploadTest', {
-        answers
+        answers,
+        practicalId
     });
     return response.data;
 }
@@ -22,15 +23,15 @@ export const getTaskFile = async (taskId) => {
     return response.data;
 }
 
-export const createTaskFile = async (taskId, file) => {
+export const uploadTaskFile = async (taskId, file) => {
     const data = new FormData()
     data.append('File', file)
     data.append('TaskId', taskId)
-    const response = await axios.post('api/Student/CreateTaskFile', data);
+    const response = await axios.put('api/Student/UploadTaskFile', data);
     return response.data;
 }
 
-export const deleteTaskFile = async (taskId) => {
-    await axios.delete(`api/Student/DeleteTaskFile?taskId=${taskId}`);
-    return true;
-}
+export const getTests = async (moduleId) => {
+    const response = await axios.get(`api/Student/GetPracticals?moduleId=${moduleId}`);
+    return response.data;
+};

@@ -21,6 +21,8 @@ public class ApplicationContext : DbContext
     public DbSet<TheoreticalMaterialFile> TheoreticalMaterialFiles { get; set; } = null!;
     public DbSet<TheoreticalMaterialLink> TheoreticalMaterialLinks { get; set; } = null!;
     public DbSet<CourseBindUser> CourseBindUsers { get; set; } = null!;
+    public DbSet<CaseFileComment> CaseFileComments { get; set; } = null!;
+    public DbSet<TestResult> TestResults { get; set; } = null!;
 
     public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
     {

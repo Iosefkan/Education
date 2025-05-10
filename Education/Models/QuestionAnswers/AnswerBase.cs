@@ -3,6 +3,7 @@ using Education.Consts;
 
 namespace Education.Models.QuestionAnswers;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(MatchAnswerBase), 0)]
 [JsonDerivedType(typeof(MultipleAnswerBase), 1)]
 [JsonDerivedType(typeof(ShortAnswerBase), 2)]
@@ -13,6 +14,5 @@ public class AnswerBase
     public string QuestionText { get; set; }
     public double QuestionWeight { get; set; }
     public double QuestionScore { get; set; }
-    // TODO: remove when db is done
     public string Id { get; set; } = Guid.NewGuid().ToString();
 }

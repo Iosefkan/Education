@@ -10,6 +10,8 @@ public class PracticalMaterial
     public string Name { get; set; }
     [Column("module_id")]
     public long ModuleId { get; set; }
+    [Column("is_public")]
+    public bool IsPublic { get; set; }
     public Module Module { get; set; }
     
     public List<Case> Cases { get; set; }

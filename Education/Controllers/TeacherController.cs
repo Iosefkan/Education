@@ -16,6 +16,28 @@ namespace Education.Controllers;
 public class TeacherController(ApplicationContext context) : ControllerBase
 {
     [HttpGet]
+    public async Task<IActionResult> GetPracticals(long moduleId)
+    {
+        var result = await context.PracticalMaterials
+            .AsNoTracking()
+            .Where(m => m.ModuleId == moduleId)
+            .Select(m => new { m.Id, m.Name })
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetTaskFileComments(long taskFileId)
+    {
+        var result = await context.CaseFileComments
+            .AsNoTracking()
+            .Where(cfc => cfc.CaseFileId == taskFileId)
+            .Select(cfc => new {cfc.Id, cfc.Created, cfc.Text})
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    [HttpGet]
     public async Task<IActionResult> GetTaskFiles(long taskId)
     {
         var result = await context.CaseFiles
@@ -80,7 +102,11 @@ public class TeacherController(ApplicationContext context) : ControllerBase
                 IsSelected = q.PracticalMaterialBindQuestions.Any(q => q.PracticalMaterialId == practId)
             })
             .ToListAsync();
-        return Ok(result);
+        
+        var practical = await context.PracticalMaterials.FirstOrDefaultAsync(pm => pm.Id == practId);
+        if (practical is null) return NotFound();
+        
+        return Ok(new { Questions = result, practical.IsPublic });
     }
 
     [HttpGet]
@@ -240,6 +266,16 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         return Ok();
     }
 
+    [HttpPut]
+    public async Task<IActionResult> MakePracticalPublic(long practicalId)
+    {
+        var practical = await context.PracticalMaterials.FirstOrDefaultAsync(p => p.Id == practicalId);
+        if (practical is null) return BadRequest();
+        practical.IsPublic = true;
+        await context.SaveChangesAsync();
+        return Ok();
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateModule([FromBody] AddModuleRequest request)
     {
@@ -264,6 +300,20 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         await context.PracticalMaterials.AddAsync(practical);
         await context.SaveChangesAsync();
         return Ok(new { practical.Id, practical.Name });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTaskFileComment([FromBody] AddTaskFileCommentRequest request)
+    {
+        var comment = new CaseFileComment()
+        {
+            CaseFileId = request.TaskFileId,
+            IsGenerated = false,
+            Text = request.Comment,
+        };
+        await context.CaseFileComments.AddAsync(comment);
+        await context.SaveChangesAsync();
+        return Ok(new { comment.Id, comment.Text, comment.Created });
     }
 
     [HttpPost]
@@ -312,7 +362,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTheory([FromBody] AddTheoryRequest request)
     {
-        TheoreticalMaterial theory = new() { ModuleId = request.ModuleId, Name =  request.Name, Text = "Текст лекции" };
+        TheoreticalMaterial theory = new() { ModuleId = request.ModuleId, Name =  request.Name, Text = "РўРµРєСЃС‚ Р»РµРєС†РёРё" };
         await context.TheoreticalMaterials.AddAsync(theory);
         await context.SaveChangesAsync();
         return Ok(new { theory.Id, theory.Name });
@@ -321,7 +371,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTask([FromBody] AddTaskRequest request)
     {
-        Case task = new() { PracticalMaterialId = request.PracticalId, Name = request.Name, Text = "Текст задания" };
+        Case task = new() { PracticalMaterialId = request.PracticalId, Name = request.Name, Text = "РўРµРєСЃС‚ Р·Р°РґР°РЅРёСЏ" };
         await context.Cases.AddAsync(task);
         await context.SaveChangesAsync();
         return Ok(new { task.Id, task.Name });

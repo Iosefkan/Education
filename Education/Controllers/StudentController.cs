@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.Json;
 using Education.Consts;
 using Education.DAL;
 using Education.DAL.Models;
@@ -40,81 +42,81 @@ public class StudentController(ApplicationContext context) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetPracticalQuestions(long practId)
     {
-        var result = await context.Questions
-            .Include(q => q.PracticalMaterialBindQuestions)
-            .Where(q => q.PracticalMaterialBindQuestions.Any(pq => pq.PracticalMaterialId == practId))
-            .AsNoTracking()
-            .Select(q => new
-            {
-                q.Id,
-                q.Text,
-                Type = q.QuestionTypeId,
-                Body = q.Options
-            })
-            .OrderByDescending(q => q.Id)
-            .ToListAsync();
-        return Ok(result);
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        
+        var testResult = await context.TestResults.Where(tr => tr.UserId == userId && tr.PracticalMaterialId == practId).FirstOrDefaultAsync();
+        var isCompleted = testResult is not null;
+        if (!isCompleted)
+        {
+            var result = await context.Questions
+                .Include(q => q.PracticalMaterialBindQuestions)
+                .Where(q => q.PracticalMaterialBindQuestions.Any(pq => pq.PracticalMaterialId == practId))
+                .AsNoTracking()
+                .Select(q => new
+                {
+                    q.Id,
+                    q.Text,
+                    Type = q.QuestionTypeId,
+                    Body = q.Options
+                })
+                .OrderByDescending(q => q.Id)
+                .ToListAsync();
+            
+            return Ok(new { Questions = result, IsCompleted = isCompleted });
+        }
+
+        JsonSerializerOptions options = new() { AllowOutOfOrderMetadataProperties = true };
+        var answersDb = await context.Answers
+                .Where(a => a.TestResultId == testResult.Id)
+                .ToListAsync();
+        
+        var answers = answersDb
+            .Select(a => JsonSerializer.Deserialize<AnswerBase>(a.Answers, options)).ToList();
+            
+        return Ok(new { Answers = answers, IsCompleted = isCompleted, testResult.Score, testResult.MaxScore });
     }
 
     [HttpPost]
     public async Task<IActionResult> UploadTest([FromBody] CheckTestResultRequest request)
     {
-        double maxScore = 0;
-        double score = 0;
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        
+        var testResult = new TestResult
+        {
+            PracticalMaterialId = request.PracticalId,
+            UserId = userId
+        };
+        
         List<AnswerBase> answers = new();
         foreach (var ans in request.Answers)
         {
             var question = await context.Questions.FindAsync(ans.Id);
+            var bindId = (await context.PracticalMaterialBindQuestions.FirstAsync(b => b.PracticalMaterialId == request.PracticalId && b.QuestionId == ans.Id)).Id;
             if (question is null) continue;
-            maxScore += question.Weight;
+            testResult.MaxScore += question.Weight;
             var result = ScoreHelper.GetAnswer((QuestionTypeEnum)question.QuestionTypeId, question, ans.Answer);
             answers.Add(result);
-            score += result.QuestionScore;
+            testResult.Score += result.QuestionScore;
+            testResult.Answers.Add(new Answer
+            {
+                PracticalMaterialBindQuestionId = bindId,
+                Answers = JsonSerializer.Serialize(result)
+            });
         }
 
-        int grade = (score / maxScore) switch
-        {
-            >= 0.9 => 5,
-            >= 0.75 and < 0.9 => 4,
-            >= 0.6 and < 0.75 => 3,
-            _ => 2,
-        };
+        await context.TestResults.AddAsync(testResult);
+        await context.SaveChangesAsync();
+
         
         return Ok(new
         {
-            Score = $"{score:F}/{maxScore:F}",
-            Percent = (score / maxScore * 100).ToString("F") + "%",
-            Grade = grade,
+            testResult.Score,
+            testResult.MaxScore,
             Answers = answers,
-        });
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> TestResult([FromBody] CheckTestResultRequest request)
-    {
-        double maxScore = 0;
-        double score = 0;
-        foreach (var ans in request.Answers)
-        {
-            var question = await context.Questions.FindAsync(ans.Id);
-            if (question is null) continue;
-            maxScore += question.Weight;
-            score += question.Weight * ScoreHelper.GetScore((QuestionTypeEnum)question.QuestionTypeId, question.Answer, ans.Answer);
-        }
-
-        int grade = (score / maxScore) switch
-        {
-            >= 0.9 => 5,
-            >= 0.75 and < 0.9 => 4,
-            >= 0.6 and < 0.75 => 3,
-            _ => 2,
-        };
-        
-        return Ok(new
-        {
-            Score = $"{score:F}/{maxScore:F}",
-            Percent = (score / maxScore * 100).ToString("F") + "%",
-            Grade = grade
         });
     }
 
@@ -128,25 +130,18 @@ public class StudentController(ApplicationContext context) : ControllerBase
             .AsNoTracking()
             .FirstOrDefaultAsync(cf => cf.UserId == userId && cf.CaseId == taskId);
         if (taskFile is null) return NotFound();
-        return Ok(new { taskFile.Path, taskFile.Id, Name = taskFile.Path.GetPublicFileName() });
+        
+        var comments = await context.CaseFileComments
+            .AsNoTracking()
+            .Where(cfc => cfc.CaseFileId == taskFile.Id && !cfc.IsGenerated)
+            .Select(cfc => new {cfc.Id, cfc.Created, cfc.Text})
+            .ToListAsync();
+        
+        return Ok(new { taskFile.Path, taskFile.Id, Name = taskFile.Path.GetPublicFileName(), Comments = comments });
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> DeleteTaskFile(long taskId)
-    {
-        var login = User?.Identity?.Name;
-        if (login is null) return Unauthorized();
-        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
-        var taskFile = await context.CaseFiles
-            .FirstOrDefaultAsync(cf => cf.UserId == userId && cf.CaseId == taskId);
-        if (taskFile is null) return BadRequest();
-        context.CaseFiles.Remove(taskFile);
-        await context.SaveChangesAsync();
-        return Ok();
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> CreateTaskFile([FromForm] AddTaskFileRequest request)
+    [HttpPut]
+    public async Task<IActionResult> UploadTaskFile([FromForm] AddTaskFileRequest request)
     {
         // only one file per user
         var login = User?.Identity?.Name;
@@ -155,11 +150,45 @@ public class StudentController(ApplicationContext context) : ControllerBase
         var taskFile = await context.CaseFiles
             .AsNoTracking()
             .FirstOrDefaultAsync(cf => cf.UserId == userId && cf.CaseId == request.TaskId);
-        if (taskFile is not null) return BadRequest();
-        var filePath = await FileHelper.SaveFileToPublic(request.File);
-        var newTaskFile = new CaseFile() { CaseId = request.TaskId, UserId = userId, Path = filePath };
-        await context.CaseFiles.AddAsync(newTaskFile);
+
+        string comment;
+        if (taskFile is not null)
+        {
+            FileHelper.DeleteFileFromPublic(taskFile.Path);
+            var filePath = await FileHelper.SaveFileToPublic(request.File);
+            taskFile.Path = filePath;
+            comment = "Файл обновлен";
+        }
+        else
+        {
+            var filePath = await FileHelper.SaveFileToPublic(request.File);
+            taskFile = new CaseFile() { CaseId = request.TaskId, UserId = userId, Path = filePath };
+            await context.CaseFiles.AddAsync(taskFile);
+            comment = "Файл добавлен";
+        }
+        
         await context.SaveChangesAsync();
-        return Ok(new { newTaskFile.Id, newTaskFile.Path, Name = newTaskFile.Path.GetPublicFileName() });
+        
+        CaseFileComment taskFileComment = new()
+        {
+            IsGenerated = true,
+            Text = comment,
+            CaseFileId = taskFile.Id,
+        };
+        await context.CaseFileComments.AddAsync(taskFileComment);
+        await context.SaveChangesAsync();
+        
+        return Ok(new { taskFile.Id, taskFile.Path, Name = taskFile.Path.GetPublicFileName() });
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetPracticals(long moduleId)
+    {
+        var result = await context.PracticalMaterials
+            .AsNoTracking()
+            .Where(m => m.ModuleId == moduleId && m.IsPublic)
+            .Select(m => new { m.Id, m.Name })
+            .ToListAsync();
+        return Ok(result);
     }
 }

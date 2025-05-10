@@ -11,6 +11,7 @@ import { getTasks } from "../../services/shared.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
 import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
+import getGrade from "../../services/gradingHelper";
 
 const UserPracticalPage = () => {
   const { state } = useLocation();
@@ -26,20 +27,27 @@ const UserPracticalPage = () => {
 
   useEffect(() => {
     async function InitQuestions() {
-      let recQuestions = await getPracticalQuestions(practId);
-      recQuestions = recQuestions.map((q) => {
-        return { ...q, body: JSON.parse(q.body) };
-      });
-      setQuestions(recQuestions);
+      let rec = await getPracticalQuestions(practId);
+      console.log(rec);
+      setIsResult(rec.isCompleted);
+      if (!rec.isCompleted){
+        rec = rec.questions.map((q) => {
+          return { ...q, body: JSON.parse(q.body) };
+        });
+        setQuestions(rec);
+        setAnswers(
+          rec.map((q) => {
+            return { id: q.id };
+          })
+        );
+      }
+      else{
+        setResult(rec);
+      }
       setIsQuestionsLoading(false);
-      setAnswers(
-        recQuestions.map((q) => {
-          return { id: q.id };
-        })
-      );
     }
     InitQuestions();
-  }, [practId, setQuestions, setAnswers]);
+  }, [practId, isResult, setQuestions, setResult, setIsResult, setIsQuestionsLoading, setAnswers]);
 
   useEffect(() => {
     async function InitTasks() {
@@ -60,7 +68,7 @@ const UserPracticalPage = () => {
 
   const checkResult = async () => {
     if (!validate()) return;
-    const testResult = await getTestResult(answers);
+    const testResult = await getTestResult(answers, practId);
     setResult(testResult);
     setIsResult(true);
   };
@@ -76,7 +84,7 @@ const UserPracticalPage = () => {
                   <Nav.Link eventKey="tasks">Задания</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link eventKey="test">Составление теста</Nav.Link>
+                  <Nav.Link eventKey="test">Тест</Nav.Link>
                 </Nav.Item>
               </Nav>
             </Col>
@@ -114,9 +122,9 @@ const UserPracticalPage = () => {
                   {isResult && (
                     <h3>
                       <br />
-                      Оценка за тест: {result.grade}
+                      Оценка за тест: {getGrade(result.score, result.maxScore)}
                       <br />
-                      Выполнено: {result.score}, {result.percent}
+                      Выполнено: {result.score.toFixed(2)}/{result.maxScore.toFixed(2)}, {(result.score / result.maxScore).toFixed(2)}%
                     </h3>
                   )}
                   {!isResult && (
@@ -125,7 +133,7 @@ const UserPracticalPage = () => {
                       style={{ height: "65px" }}
                       onClick={checkResult}
                     >
-                      Проверить результат
+                      Сдать тест
                     </Button>
                   )}
 

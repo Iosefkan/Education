@@ -1,7 +1,8 @@
 import Layout from "../../components/Layout";
 import TestCard from "../../components/cards/TestCard";
 import TheoryCard from "../../components/cards/TheoryCard";
-import { getTests, getTheories } from "../../services/shared.service";
+import { getTheories } from "../../services/shared.service";
+import { getTests } from "../../services/student.service";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Tab, Nav, Container, Row, Col } from "react-bootstrap";

@@ -177,8 +177,6 @@ export const createQuestion = async (moduleId, type, body, answer, weight, text)
 }
 
 export const getPractAllQuestion = async (moduleId, practId) => {
-    console.log(moduleId);
-    console.log(practId);
     const response = await axios.get(`api/Teacher/GetMakePracticalQuestions?moduleId=${moduleId}&practId=${practId}`);
     return response.data;
 }
@@ -206,4 +204,26 @@ export const updateTheoryText = async (theoryId, text) => {
     } catch{
         return false;
     }
+}
+
+export const getTests = async (moduleId) => {
+    const response = await axios.get(`api/Teacher/GetPracticals?moduleId=${moduleId}`);
+    return response.data;
+};
+
+export const getComments = async (taskFileId) => {
+    const response = await axios.get(`api/Teacher/GetTaskFileComments?taskFileId=${taskFileId}`);
+    return response.data;
+};
+
+export const createComment = async (taskFileId, comment) => {
+    const response = await axios.post('api/Teacher/AddTaskFileComment', {
+        taskFileId,
+        comment
+    });
+    return response.data;
+};
+
+export const setPublic = async (practicalId) => {
+    await axios.put(`api/Teacher/MakePracticalPublic?practicalId=${practicalId}`)
 }

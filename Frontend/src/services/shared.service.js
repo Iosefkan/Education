@@ -34,8 +34,3 @@ export const getTheoryDocs = async (theoryId) => {
     const response = await axios.get(`api/Shared/GetTheoryDocs?theoryId=${theoryId}`);
     return response.data;
 };
-
-export const getTests = async (moduleId) => {
-    const response = await axios.get(`api/Shared/GetPracticals?moduleId=${moduleId}`);
-    return response.data;
-};

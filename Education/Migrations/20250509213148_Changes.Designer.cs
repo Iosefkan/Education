@@ -3,6 +3,7 @@ using System;
 using Education.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Education.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20250509213148_Changes")]
+    partial class Changes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,8 +40,11 @@ namespace Education.Migrations
                         .HasColumnName("answer");
 
                     b.Property<long>("PracticalMaterialBindQuestionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("QuestionListBindQuestionId")
                         .HasColumnType("bigint")
-                        .HasColumnName("practical_material_bind_question_id");
+                        .HasColumnName("question_list_bind_question_id");
 
                     b.Property<long>("TestResultId")
                         .HasColumnType("bigint")
@@ -426,9 +432,17 @@ namespace Education.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<int>("Grade")
+                        .HasColumnType("integer")
+                        .HasColumnName("grade");
+
                     b.Property<double>("MaxScore")
                         .HasColumnType("double precision")
                         .HasColumnName("max_score");
+
+                    b.Property<double>("Percent")
+                        .HasColumnType("double precision")
+                        .HasColumnName("percent");
 
                     b.Property<long>("PracticalMaterialId")
                         .HasColumnType("bigint")

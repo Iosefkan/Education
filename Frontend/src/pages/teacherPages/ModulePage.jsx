@@ -13,8 +13,9 @@ import {
   getQuestions,
   updateQuestion,
   deleteQuestion,
+  getTests,
 } from "../../services/teacher.service";
-import { getTests, getTheories } from "../../services/shared.service";
+import { getTheories } from "../../services/shared.service";
 import { useState, useEffect } from "react";
 import { Button, Tab, Nav, Container, Row, Col, Form } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
