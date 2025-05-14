@@ -35,7 +35,7 @@ const ShortAnswerQuestion = ({
           </Form.Group>
           {!isReadonly && (<div className="d-flex justify-content-end mt-4 gap-2">
             <Button variant="primary" onClick={() => onSave(answer)}>
-              Сохранить вопрос
+              Сохранить ответ
             </Button>
           </div>)}
         </Form>

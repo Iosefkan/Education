@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-bootstrap";
 import { PlusCircle, Trash } from "react-bootstrap-icons";
+import "../../css/numInput.css";
 
 const MatchingQuestionEditor = ({
   onSave,
@@ -53,6 +54,22 @@ const MatchingQuestionEditor = ({
     }
   };
 
+    const handleKeyDown = (e, matchid, field, value) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      let newVal = Number(value) + 0.1;
+      handleMatchChange(matchid, field, newVal > 1 ? value : newVal.toFixed(1));
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      let newVal = Number(value) - 0.1;
+      handleMatchChange(matchid, field, newVal < 0 ? value : newVal.toFixed(1));
+    }
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+  };
+
   const validate = () => {
     const newErrors = {};
     const leftValues = [];
@@ -91,7 +108,7 @@ const MatchingQuestionEditor = ({
       newErrors.general = "Должно быть как минимум два соотнесения";
     }
 
-    if (accWeight !== 1) {
+    if (Math.abs(accWeight - 1 ) > 0.00001) {
       newErrors.general = "Общий вес ответов должен равняться 1";
     }
 
@@ -107,11 +124,11 @@ const MatchingQuestionEditor = ({
       matches: matches.map(({ left, right, weight }, index) => ({
         right: {
           id: `q${index + 1}`,
-          text: left,
+          text: right,
         },
         left: {
           id: `a${index + 1}`,
-          text: right,
+          text: left,
         },
         weight,
       })),
@@ -209,12 +226,15 @@ const MatchingQuestionEditor = ({
                 <Col md={1}>
                   <Form.Control
                     type="number"
+                    className="no-spinners"
                     value={match.weight}
                     onChange={(e) => {
                       handleValidateWeight(e);
                       handleMatchChange(match.id, "weight", e.target.value);
                     }}
                     placeholder="Вес"
+                    onKeyDown={(e) => handleKeyDown(e, match.id, "weight", e.target.value)}
+                    onWheel={handleWheel}
                     isInvalid={!!errors[`weight-${match.id}`]}
                   />
                   <Form.Control.Feedback type="invalid">

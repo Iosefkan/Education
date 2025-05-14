@@ -5,11 +5,6 @@ export const getModules = async (courseId) => {
     return response.data;
 };
 
-export const getTasks = async (practicalId) => {
-    const response = await axios.get(`api/Shared/GetTasks?practicalId=${practicalId}`);
-    return response.data;
-}
-
 export const getTheories = async (moduleId) => {
     const response = await axios.get(`api/Shared/GetTheories?moduleId=${moduleId}`);
     return response.data;

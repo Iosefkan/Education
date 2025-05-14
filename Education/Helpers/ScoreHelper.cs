@@ -135,8 +135,8 @@ public static class ScoreHelper
                     var isCorrect = ans.Right == match.Right.Id;
                     matchResult.Matches.Add(new Match
                     {
-                        Left = ans.Left,
-                        Right = ans.Right,
+                        Left = match.Left.Text,
+                        Right = match.Right.Text,
                         IsCorrect = isCorrect,
                         Weight = isCorrect ? answer.Weight * match.Weight : 0
                     });

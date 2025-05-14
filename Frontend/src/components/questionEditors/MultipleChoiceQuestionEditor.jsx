@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Form, ListGroup, Card, Alert, Badge } from "react-bootstrap";
 import { PlusCircle, Trash } from "react-bootstrap-icons";
+import "../../css/numInput.css";
 
 const MultipleChoiceQuestionEditor = ({
   onSave,
@@ -56,6 +57,22 @@ const MultipleChoiceQuestionEditor = ({
     );
   };
 
+  const handleKeyDown = (e, answerId, newText) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      let newVal = Number(newText) + 0.1;
+      handleAnswerChange(answerId, newVal > 1 ? newText : newVal.toFixed(1), true);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      let newVal = Number(newText) - 0.1;
+      handleAnswerChange(answerId, newVal < 0 ? newText : newVal.toFixed(1), true);
+    }
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+  };
+
   const handleValidateWeight = (e) => {
     if (e.target.value < 0 || e.target.value > 1) {
       e.target.value = "";
@@ -72,7 +89,7 @@ const MultipleChoiceQuestionEditor = ({
     const newErrors = {};
     if (!questionWeight) newErrors.weight = "Введите вес вопроса";
     let accWeight = answers.reduce((acc, ans) => acc + Number(ans.weight), 0);
-    if (accWeight !== 1)
+    if (Math.abs(accWeight - 1 ) > 0.00001)
       newErrors.accWeight = "Общий вес ответов должен равняться 1";
     if (!questionText.trim()) newErrors.question = "Заполните текст вопроса";
     if (answers.some((a) => !a.text.trim()))
@@ -193,6 +210,7 @@ const MultipleChoiceQuestionEditor = ({
               />
 
               <Form.Control
+                className="no-spinners"
                 type="number"
                 style={{ maxWidth: "100px" }}
                 value={answer.weight}
@@ -200,6 +218,8 @@ const MultipleChoiceQuestionEditor = ({
                   handleValidateWeight(e);
                   handleAnswerChange(answer.id, e.target.value, true);
                 }}
+                onKeyDown={(e) => handleKeyDown(e, answer.id, e.target.value)}
+                onWheel={handleWheel}
                 placeholder="Вес"
                 isInvalid={!!errors.answers && !answer.wieght}
               />

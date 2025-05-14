@@ -177,7 +177,7 @@ const MakePracticalPage = () => {
                         Сохранить изменения
                       </Button>
                       <Button onClick={() => handleSetPublic()}>
-                        Сохранить изменения и завершить
+                        Сохранить изменения и завершить редактирование
                       </Button>
                     </div>
                   )}
@@ -221,7 +221,7 @@ const MakePracticalPage = () => {
                       ))}
                       {!userProtocols ||
                         (userProtocols.length === 0 && (
-                          <h5>Нет выполневший тест стедентов</h5>
+                          <h5>Нет выполнивших тест студентов</h5>
                         ))}
                     </ListGroup>
                   </Tab.Pane>

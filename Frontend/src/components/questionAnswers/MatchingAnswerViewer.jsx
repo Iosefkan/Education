@@ -7,6 +7,8 @@ const MatchingAnswerViewer = ({
   questionId,
   matches,
 }) => {
+
+  console.log(matches);
   return (
     <Card className="mb-4 shadow-sm">
       <Card.Header className="bg-light d-flex justify-content-between align-items-center">

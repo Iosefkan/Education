@@ -31,7 +31,7 @@ const CreateModuleModal = ({ show, onHide, onCreate }) => {
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Создание нового модуля</Modal.Title>
+        <Modal.Title>Создание нового раздела</Modal.Title>
       </Modal.Header>
       
       <Form onSubmit={handleSubmit}>
@@ -54,7 +54,7 @@ const CreateModuleModal = ({ show, onHide, onCreate }) => {
             Отменить
           </Button>
           <Button variant="primary" type="submit">
-            Создать модуль
+            Создать раздел
           </Button>
         </Modal.Footer>
       </Form>

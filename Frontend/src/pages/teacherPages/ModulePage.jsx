@@ -39,6 +39,22 @@ const ModulePage = () => {
     setSelectedType(event.target.value);
   };
 
+  const [selectedFilterType, setSelectedFilterType] = useState("0");
+  const filters = [
+    "Все вопросы",
+    "Вопросы с одним ответом",
+    "Вопросы с несколькими ответами",
+    "Вопросы с соотнесением",
+    "Вопросы с вводом ответа",
+  ];
+  const handleFilterTypeChange = (event) => {
+    setSelectedFilterType(event.target.value);
+  };
+  const filteredQuestions =
+    selectedFilterType === "0"
+      ? questions
+      : questions.filter((q) => q.type == selectedFilterType);
+
   const [activeKey, setActiveKey] = useState("theory");
   const [tests, setTests] = useState([]);
   const [theories, setTheories] = useState([]);
@@ -115,7 +131,10 @@ const ModulePage = () => {
       text
     );
     console.log(response);
-    setQuestions([...questions, { ...response, answer: JSON.parse(response.answer)}]);
+    setQuestions([
+      ...questions,
+      { ...response, answer: JSON.parse(response.answer) },
+    ]);
     console.log(questions);
   };
 
@@ -256,10 +275,24 @@ const ModulePage = () => {
 
                   <div className="mt-5">
                     <h3>Список вопросов:</h3>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Фильтрация по типу вопроса</Form.Label>
+                      <Form.Select
+                        value={selectedFilterType}
+                        onChange={handleFilterTypeChange}
+                        aria-label="Type selection dropdown"
+                      >
+                        <option value="0">{filters[0]}</option>
+                        <option value="1">{filters[1]}</option>
+                        <option value="2">{filters[2]}</option>
+                        <option value="3">{filters[3]}</option>
+                        <option value="4">{filters[4]}</option>
+                      </Form.Select>
+                    </Form.Group>
                     <PaginatedData
-                      data={questions.sort((a, b) => b.id - a.id)}
+                      data={filteredQuestions.sort((a, b) => b.id - a.id)}
                       pageSizeOptions={[5, 10, 15]}
-                      length={questions.length}
+                      length={filteredQuestions.length}
                       isLoading={isLoading}
                     >
                       <BaseQuestionViewer

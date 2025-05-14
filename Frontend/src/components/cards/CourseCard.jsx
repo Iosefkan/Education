@@ -19,7 +19,7 @@ const CourseCard = ({ id, title, description, dueDate, canDelete = false, onDele
 
   return (
     <>
-      <Card onClick={onClick} className="mb-3 shadow-sm" style={{ width: '350px', height: '200px', cursor: 'pointer' }}>
+      <Card onClick={onClick} className="mb-3 shadow-sm" style={{ width: '350px', minHeight: '200px', cursor: 'pointer' }}>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <Card.Title className="mb-0">{title}</Card.Title>
           {canDelete && (<div onClick={e => e.stopPropagation()}>
