@@ -17,6 +17,7 @@ import UserPracticalPage from "./pages/studentPages/UserPracticalPage";
 import UserTheoryMaterialPage from "./pages/studentPages/UserTheoryMaterialPage"
 import UserTaskPage from "./pages/studentPages/UserTaskPage"
 import TestProtocolPage from "./pages/teacherPages/TestProtocolPage";
+import UserProtocolPage from "./pages/studentPages/UserProtocolPage";
 
 const App = () => {
   return (
@@ -39,6 +40,7 @@ const App = () => {
         <Route path="/test" element={<AuthGuard><UserPracticalPage /></AuthGuard>} />
         <Route path="/theory" element={<AuthGuard><UserTheoryMaterialPage /></AuthGuard>} />
         <Route path="/task" element={<AuthGuard><UserTaskPage /></AuthGuard>} />
+        <Route path="/userProtocol" element={<AuthGuard><UserProtocolPage /></AuthGuard>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>

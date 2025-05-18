@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import PaginatedData from "../../components/PaginatedData";
 import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
 import Layout from "../../components/Layout";
-import { getTestProtocol } from "../../services/teacher.service";
+import { getProtocol } from "../../services/student.service";
 import getGrade from "../../services/gradingHelper";
 import {
   getModuleCrumbs,
@@ -11,47 +11,47 @@ import {
   getPractCrumbs,
 } from "../../services/crumbsHelper";
 
-const TestProtocolPage = () => {
+const UserProtocolPage = () => {
   const { state } = useLocation();
-  const { testResultId, username, practName, tryNumber } = state;
+  const { testResultId, practName, tryNumber } = state;
   const courseCrumbs = getCourseCrumbs();
   const moduleCrumbs = getModuleCrumbs();
   const practCrumbs = getPractCrumbs();
   const paths = [
     {
       active: false,
-      to: "/courses",
+      to: "/userCourses",
       id: 1,
       state: {},
       label: "Курсы",
     },
     {
       active: false,
-      to: "/course",
+      to: "/userCourse",
       id: 2,
       state: courseCrumbs,
       label: `Курс "${courseCrumbs.courseTitle}"`,
     },
     {
       active: false,
-      to: "/module",
+      to: "/userModule",
       id: 3,
       state: moduleCrumbs,
       label: `Раздел "${moduleCrumbs.moduleTitle}"`,
     },
     {
       active: false,
-      to: "/makeTest",
+      to: "/test",
       id: 4,
       state: practCrumbs,
       label: `Практический материал "${practName}"`,
     },
     {
       active: true,
-      to: "/testProtocol",
+      to: "/userProtocol",
       id: 5,
       state: state,
-      label: `Протокол тестирования пользователя "${username}", попытка №${tryNumber}`,
+      label: `Протокол тестирования попытки №${tryNumber}`,
     },
   ];
 
@@ -60,7 +60,7 @@ const TestProtocolPage = () => {
 
   useEffect(() => {
     async function InitProtocol() {
-      const rec = await getTestProtocol(testResultId);
+      const rec = await getProtocol(testResultId);
       setResult(rec);
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ const TestProtocolPage = () => {
   return (
     <Layout paths={paths}>
       <h2 className="mb-4">
-        Протокол выполнения теста "{practName}" студентом "{username}", попытка №{tryNumber}
+        Протокол выполнения теста "{practName}", попытка №{tryNumber}
       </h2>
       {!isLoading && (
         <>
@@ -94,4 +94,4 @@ const TestProtocolPage = () => {
   );
 };
 
-export default TestProtocolPage;
+export default UserProtocolPage;

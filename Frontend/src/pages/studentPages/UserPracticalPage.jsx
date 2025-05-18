@@ -1,7 +1,17 @@
 import Layout from "../../components/Layout";
 import TaskCard from "../../components/cards/TaskCard";
-import { Button, Alert, Tab, Container, Col, Row, Nav } from "react-bootstrap";
-import { useLocation } from "react-router-dom";
+import {
+  Button,
+  Alert,
+  Tab,
+  Container,
+  Col,
+  Row,
+  Nav,
+  ListGroup,
+  Card,
+} from "react-bootstrap";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   getPracticalQuestions,
@@ -9,10 +19,10 @@ import {
   getTasks,
   getTestStatus,
   startTest,
+  getProtocols,
 } from "../../services/student.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
-import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
 import getGrade from "../../services/gradingHelper";
 import {
   getModuleCrumbs,
@@ -21,6 +31,7 @@ import {
 } from "../../services/crumbsHelper";
 
 const UserPracticalPage = () => {
+  const navigate = useNavigate();
   const { state } = useLocation();
   const { practId, practTitle } = state;
   setPractCrumbs(state);
@@ -59,49 +70,45 @@ const UserPracticalPage = () => {
 
   const [questions, setQuestions] = useState([]);
   const [isStarted, setIsStarted] = useState(false);
+  const [tryNumber, setTryNumber] = useState(1);
+  const [protocols, setProtocols] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [isQuestionsLoading, setIsQuestionsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isResult, setIsResult] = useState(false);
-  const [result, setResult] = useState({});
+  const [resultMessage, setResultMessage] = useState("");
   const [activeKey, setActiveKey] = useState("tasks");
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
     async function InitQuestions() {
-      let isStarted = await getTestStatus(practId);
-      setIsStarted(isStarted);
-      if (!isStarted) {
+      let resp = await getTestStatus(practId);
+      setIsStarted(resp.isStarted);
+      setTryNumber(resp.tryNumber);
+      if (!resp.isStarted) {
         return;
       }
       let rec = await getPracticalQuestions(practId);
-      setIsResult(rec.isCompleted);
-      if (!rec.isCompleted) {
-        rec = rec.questions.map((q) => {
-          return { ...q, body: JSON.parse(q.body) };
-        });
-        setQuestions(rec);
-        setAnswers(
-          rec.map((q) => {
-            return { id: q.id };
-          })
-        );
-      } else {
-        setResult(rec);
-      }
+      rec = rec.questions.map((q) => {
+        return { ...q, body: JSON.parse(q.body) };
+      });
+      setQuestions(rec);
+      setAnswers(
+        rec.map((q) => {
+          return { id: q.id };
+        })
+      );
       setIsQuestionsLoading(false);
     }
     InitQuestions();
-  }, [
-    practId,
-    isResult,
-    setQuestions,
-    setResult,
-    setIsResult,
-    setIsQuestionsLoading,
-    setAnswers,
-    setIsStarted,
-  ]);
+  }, [practId, setQuestions, setIsQuestionsLoading, setAnswers, setIsStarted]);
+
+  useEffect(() => {
+    async function InitProtocols() {
+      let rec = await getProtocols(practId);
+      setProtocols(rec);
+    }
+    InitProtocols();
+  }, [practId, setProtocols]);
 
   useEffect(() => {
     async function InitTasks() {
@@ -122,30 +129,44 @@ const UserPracticalPage = () => {
 
   const checkResult = async () => {
     if (!validate()) return;
-    const testResult = await getTestResult(answers, practId);
-    setResult(testResult);
-    setIsResult(true);
+    const testProtocol = await getTestResult(answers, practId);
+    setProtocols([...protocols, testProtocol]);
+    setResultMessage('Результаты теста успешно загружены, посмотреть результат можно во вкладке протоколов');
+    setIsStarted(false);
+
+    setTimeout(() => setResultMessage(""), 5000);
   };
 
   const handleStartTest = async () => {
-    await startTest(practId);
-    let rec = await getPracticalQuestions(practId);
-    setIsResult(rec.isCompleted);
-    if (!rec.isCompleted) {
-      rec = rec.questions.map((q) => {
-        return { ...q, body: JSON.parse(q.body) };
-      });
-      setQuestions(rec);
-      setAnswers(
-        rec.map((q) => {
-          return { id: q.id };
-        })
-      );
-    } else {
-      setResult(rec);
+    try {
+      const tryNumber = await startTest(practId);
+      setTryNumber(tryNumber);
+    } catch {
+      setError({ message: "Достигнуто максимальное количество попыток сдачи" });
     }
+
+    let rec = await getPracticalQuestions(practId);
+    rec = rec.questions.map((q) => {
+      return { ...q, body: JSON.parse(q.body) };
+    });
+    setQuestions(rec);
+    setAnswers(
+      rec.map((q) => {
+        return { id: q.id };
+      })
+    );
     setIsQuestionsLoading(false);
     setIsStarted(true);
+  };
+
+  const handleSelectProtocol = (testResultId, userId, tryNumber) => {
+    navigate("/userProtocol", {
+      state: {
+        testResultId,
+        practName: practTitle,
+        tryNumber: tryNumber,
+      },
+    });
   };
 
   return (
@@ -160,6 +181,11 @@ const UserPracticalPage = () => {
                 </Nav.Item>
                 <Nav.Item>
                   <Nav.Link eventKey="test">Тест</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="protocols">
+                    Протоколы попыток сдачи
+                  </Nav.Link>
                 </Nav.Item>
               </Nav>
             </Col>
@@ -190,13 +216,28 @@ const UserPracticalPage = () => {
                     <h1>Практический материал "{practTitle}"</h1>
                   </div>
                   {!isStarted && (
-                    <Button
-                      className="w-100 mb-5"
-                      style={{ height: "65px" }}
-                      onClick={handleStartTest}
-                    >
-                      Начать тест
-                    </Button>
+                    <>
+                      {error.message && (
+                        <Alert variant="danger" className="mt-3">
+                          {error.message}
+                        </Alert>
+                      )}
+                      {resultMessage && (
+                        <Alert variant="success" className="mt-3">
+                          {resultMessage}
+                        </Alert>
+                      )}
+                      <Button
+                        className="w-100 mb-5"
+                        style={{ height: "65px" }}
+                        onClick={handleStartTest}
+                      >
+                        Начать тест
+                      </Button>
+                    </>
+                  )}
+                  {isStarted && (
+                    <h5 className="mb-3">Попытка сдачи №{tryNumber}</h5>
                   )}
 
                   {isStarted && (
@@ -206,67 +247,72 @@ const UserPracticalPage = () => {
                           {error}
                         </Alert>
                       )}
-                      {isResult && (
-                        <h3>
-                          <br />
-                          Оценка за тест:{" "}
-                          {getGrade(result.score, result.maxScore)}
-                          <br />
-                          Выполнено: {result.score.toFixed(2)}/
-                          {result.maxScore.toFixed(2)},{" "}
-                          {((result.score / result.maxScore) * 100).toFixed(2)}%
-                        </h3>
-                      )}
-                      {!isResult && (
-                        <Button
-                          className="w-100 mb-5"
-                          style={{ height: "65px" }}
-                          onClick={checkResult}
-                        >
-                          Сдать тест
-                        </Button>
-                      )}
+                      <Button
+                        className="w-100 mb-5"
+                        style={{ height: "65px" }}
+                        onClick={checkResult}
+                      >
+                        Сдать тест
+                      </Button>
 
-                      {!isResult && (
-                        <PaginatedData
-                          isLoading={isQuestionsLoading}
-                          length={questions.length}
-                          data={questions}
-                          pageSizeOptions={[5, 10, 15]}
-                        >
-                          <BaseQuestion
-                            setAnswers={setAnswers}
-                            answers={answers}
-                          />
-                        </PaginatedData>
-                      )}
-                      {isResult && (
-                        <PaginatedData
-                          length={result.answers.length}
-                          data={result.answers}
-                          pageSizeOptions={[5, 10, 15]}
-                        >
-                          <BaseAnswer />
-                        </PaginatedData>
-                      )}
+                      <PaginatedData
+                        isLoading={isQuestionsLoading}
+                        length={questions.length}
+                        data={questions}
+                        pageSizeOptions={[5, 10, 15]}
+                      >
+                        <BaseQuestion
+                          setAnswers={setAnswers}
+                          answers={answers}
+                        />
+                      </PaginatedData>
 
                       {error && (
                         <Alert variant="danger" className="mt-5">
                           {error}
                         </Alert>
                       )}
-                      {!isResult && (
-                        <Button
-                          className="w-100 my-5"
-                          style={{ height: "65px" }}
-                          onClick={checkResult}
-                        >
-                          Сдать тест
-                        </Button>
-                      )}
-                      {isResult && <div className="mb-5"></div>}
+                      <Button
+                        className="w-100 my-5"
+                        style={{ height: "65px" }}
+                        onClick={checkResult}
+                      >
+                        Сдать тест
+                      </Button>
                     </>
                   )}
+                </Tab.Pane>
+                <Tab.Pane eventKey="protocols">
+                  <div className="mb-5">
+                    <h1>Практический материал "{practTitle}"</h1>
+                  </div>
+
+                  {protocols.length === 0 && (
+                    <h5>Нет сохраненных попыток сдачи</h5>
+                  )}
+                  <ListGroup>
+                    {protocols.map((prot) => (
+                      <Card
+                        key={prot.id}
+                        className="hover-overlay mb-3"
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          handleSelectProtocol(prot.id, prot.userId, prot.tryNumber)
+                        }
+                      >
+                        <Card.Header className="mb-0">
+                          <Card.Title>Попытка №{prot.tryNumber}</Card.Title>
+                        </Card.Header>
+                        <Card.Body>
+                          Оценка за тест: {getGrade(prot.score, prot.maxScore)}
+                          <br />
+                          Выполнено: {prot.score.toFixed(2)}/
+                          {prot.maxScore.toFixed(2)},{" "}
+                          {((prot.score / prot.maxScore) * 100).toFixed(2)}%
+                        </Card.Body>
+                      </Card>
+                    ))}
+                  </ListGroup>
                 </Tab.Pane>
               </Tab.Content>
             </Col>

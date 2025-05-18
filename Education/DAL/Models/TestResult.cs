@@ -10,6 +10,8 @@ public class TestResult
     public DateTime StatedDate { get; set; } = DateTime.UtcNow;
     [Column("turned_at")]
     public DateTime? TurnedDate { get; set; }
+    [Column("try_number")]
+    public int TryNumber { get; set; }
     [Column("is_completed")]
     public bool IsCompleted { get; set; }
     [Column("score")]

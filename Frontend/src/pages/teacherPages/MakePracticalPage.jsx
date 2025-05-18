@@ -12,6 +12,8 @@ import {
   Col,
   ListGroup,
   Card,
+  Form,
+  FloatingLabel,
 } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -25,7 +27,12 @@ import {
   getUserProtocols,
 } from "../../services/teacher.service";
 import getGrade from "../../services/gradingHelper";
-import { getModuleCrumbs, getCourseCrumbs, setPractCrumbs } from '../../services/crumbsHelper';
+import {
+  getModuleCrumbs,
+  getCourseCrumbs,
+  setPractCrumbs,
+} from "../../services/crumbsHelper";
+import "../../css/numInput.css";
 
 const MakePracticalPage = () => {
   const { state } = useLocation();
@@ -72,19 +79,21 @@ const MakePracticalPage = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState({});
   const [activeKey, setActiveKey] = useState("tasks");
+  const [triesCount, setTriesCount] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
     async function InitQuestions() {
       let recQuestions = await getPractAllQuestion(moduleId, practId);
       setIsPublic(recQuestions.isPublic);
+      setTriesCount(recQuestions.triesCount);
       recQuestions = recQuestions.questions.map((q) => {
         return { ...q, body: JSON.parse(q.body) };
       });
       setQuestions(recQuestions);
     }
     InitQuestions();
-  }, [moduleId, practId, setQuestions, setIsPublic]);
+  }, [moduleId, practId, setQuestions, setIsPublic, setTriesCount]);
 
   useEffect(() => {
     async function InitTasks() {
@@ -104,13 +113,13 @@ const MakePracticalPage = () => {
   }, [isPublic, practId, setUserProtocols]);
 
   const handleUpdateTestQuestions = async () => {
-    const result = await updatePractQuestions(practId, selectedIds);
+    const result = await updatePractQuestions(practId, selectedIds, triesCount);
     if (result) {
-      setSaveMessage({ isError: false, message: "Вопросы в тесте обновлены" });
+      setSaveMessage({ isError: false, message: "Тест обновлен" });
     } else {
       setSaveMessage({
         isError: true,
-        message: "Ошибка при обновлении вопросов теста",
+        message: "Ошибка при обновлении теста",
       });
     }
 
@@ -133,10 +142,25 @@ const MakePracticalPage = () => {
     setTasks(tasks.filter((m) => m.id !== taskData.id));
   };
 
-  const handleSelectProtocol = (userId, username) => {
+  const handleSelectProtocol = (testResultId, username, tryNumber) => {
     navigate("/testProtocol", {
-      state: { userId, username, practName: practTitle, practId },
+      state: {
+        testResultId,
+        username,
+        practName: practTitle,
+        tryNumber: tryNumber,
+      },
     });
+  };
+
+  const validateTriesCount = (e) => {
+    e.target.value = Math.trunc(e.target.value);
+    if (e.target.value < 1) {
+      e.target.value = 1;
+    }
+    if (e.target.value > 10) {
+      e.target.value = 10;
+    }
   };
 
   return (
@@ -220,6 +244,24 @@ const MakePracticalPage = () => {
                     <h5 className="mb-3">Создание теста завершено</h5>
                   )}
 
+                  <FloatingLabel
+                    controlId="title"
+                    label="Количество попыток"
+                    className="mb-3"
+                  >
+                    <Form.Control
+                      type="number"
+                      size="lg"
+                      className="no-spinners"
+                      readOnly={isPublic}
+                      value={triesCount}
+                      onChange={(e) => {
+                        validateTriesCount(e);
+                        setTriesCount(e.target.value);
+                      }}
+                    />
+                  </FloatingLabel>
+
                   <AccordionMultiSelect
                     className="mb-10"
                     isReadonly={isPublic}
@@ -233,15 +275,20 @@ const MakePracticalPage = () => {
                       {userProtocols.map((prot) => (
                         <Card
                           key={prot.id}
-                          className="hover-overlay"
+                          className="hover-overlay mb-3"
                           style={{ cursor: "pointer" }}
                           onClick={() =>
-                            handleSelectProtocol(prot.userId, prot.name)
+                            handleSelectProtocol(
+                              prot.id,
+                              prot.name,
+                              prot.tryNumber
+                            )
                           }
                         >
                           <Card.Header className="mb-0">
                             <Card.Title>
-                              Выполнивший студент: {prot.name}
+                              Выполнивший студент: {prot.name}, попытка №
+                              {prot.tryNumber}
                             </Card.Title>
                           </Card.Header>
                           <Card.Body>

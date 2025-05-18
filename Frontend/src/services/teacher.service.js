@@ -195,11 +195,12 @@ export const getPractAllQuestion = async (moduleId, practId) => {
   return response.data;
 };
 
-export const updatePractQuestions = async (practicalId, questionIds) => {
+export const updatePractQuestions = async (practicalId, questionIds, triesCount) => {
   try {
     await axios.put("api/Teacher/UpdatePracticalMaterialQuestions", {
       practicalId,
       questionIds,
+      triesCount
     });
     return true;
   } catch {
@@ -268,9 +269,9 @@ export const getTasks = async (practicalId) => {
   return response.data;
 };
 
-export const getTestProtocol = async (practicalId, userId) => {
+export const getTestProtocol = async (testResultId) => {
   const response = await axios.get(
-    `api/Teacher/GetTestProtocol?practicalId=${practicalId}&userId=${userId}`
+    `api/Teacher/GetTestProtocol?testResultId=${testResultId}`
   );
   return response.data;
 };

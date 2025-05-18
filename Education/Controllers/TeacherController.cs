@@ -24,15 +24,15 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             .Include(tr => tr.User)
             .AsNoTracking()
             .Where(tr => tr.PracticalMaterialId == practicalId && tr.IsCompleted)
-            .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore})
+            .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore, tr.TryNumber })
             .ToListAsync();
         return Ok(result);
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetTestProtocol(long practicalId, long userId)
+    public async Task<IActionResult> GetTestProtocol(long testResultId)
     {
-        var testResult = await context.TestResults.Where(tr => tr.UserId == userId && tr.PracticalMaterialId == practicalId).FirstOrDefaultAsync();
+        var testResult = await context.TestResults.Where(tr => tr.Id == testResultId).FirstOrDefaultAsync();
         if (testResult is null) return NotFound();
         
         JsonSerializerOptions options = new() { AllowOutOfOrderMetadataProperties = true };
@@ -152,7 +152,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var practical = await context.PracticalMaterials.FirstOrDefaultAsync(pm => pm.Id == practId);
         if (practical is null) return NotFound();
         
-        return Ok(new { Questions = result, practical.IsPublic });
+        return Ok(new { Questions = result, practical.IsPublic, practical.TriesCount });
     }
 
     [HttpGet]
@@ -254,6 +254,10 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     public async Task<IActionResult> UpdatePracticalMaterialQuestions(
         [FromBody] UpdatePracticalQuestionsRequest request)
     {
+        var practical = await context.PracticalMaterials.FirstOrDefaultAsync(pm => pm.Id == request.PracticalId);
+        if (practical is null) return BadRequest();
+        practical.TriesCount = request.TriesCount;
+        
         var curTestQuestions = await context.PracticalMaterialBindQuestions
             .Where(u => u.PracticalMaterialId == request.PracticalId)
             .ToListAsync();
@@ -360,7 +364,8 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var practical = new PracticalMaterial()
         {
             ModuleId = request.ModuleId,
-            Name = request.Name
+            Name = request.Name,
+            TriesCount = 1,
         };
         await context.PracticalMaterials.AddAsync(practical);
         await context.SaveChangesAsync();
