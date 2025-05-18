@@ -5,10 +5,55 @@ import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
 import Layout from "../../components/Layout";
 import { getTestProtocol } from "../../services/teacher.service";
 import getGrade from "../../services/gradingHelper";
+import {
+  getModuleCrumbs,
+  getCourseCrumbs,
+  getPractCrumbs,
+} from "../../services/crumbsHelper";
 
 const TestProtocolPage = () => {
   const { state } = useLocation();
   const { userId, username, practName, practId } = state;
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const practCrumbs = getPractCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/courses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/course",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+    {
+      active: false,
+      to: "/module",
+      id: 3,
+      state: moduleCrumbs,
+      label: `Раздел "${moduleCrumbs.moduleTitle}"`,
+    },
+    {
+      active: false,
+      to: "/makeTest",
+      id: 4,
+      state: practCrumbs,
+      label: `Практический материал "${practName}"`,
+    },
+    {
+      active: true,
+      to: "/testProtocol",
+      id: 5,
+      state: state,
+      label: `Протокол тестирования пользователя "${username}"`,
+    },
+  ];
 
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState({});
@@ -22,7 +67,7 @@ const TestProtocolPage = () => {
     InitProtocol();
   }, [userId, practId, setResult]);
   return (
-    <Layout>
+    <Layout paths={paths}>
       <h2 className="mb-4">
         Протокол выполнения теста "{practName}" студентом {username}
       </h2>

@@ -21,7 +21,6 @@ const CreateUserModal = ({ show, onHide, onCreateUser }) => {
   useEffect(() => {
     async function initRoles(){
         const recRoles = await getRoles();
-        console.log(recRoles);
         setRoles(recRoles)
     }
     initRoles();

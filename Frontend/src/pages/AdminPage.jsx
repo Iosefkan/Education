@@ -88,7 +88,7 @@ const AdminPage = () => {
   ];
 
   return (
-    <Layout isAdmin={true}>
+    <Layout isAdmin={true} paths={[]}>
       <Button className="mb-4" onClick={() => setCreateShowModal(true)}>
         Добавить пользователя
       </Button>
