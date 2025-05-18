@@ -14,9 +14,9 @@ import {
   updateQuestion,
   deleteQuestion,
   getTests,
+  getTheories
 } from "../../services/teacher.service";
 import { setModuleCrumbs, getCourseCrumbs } from '../../services/crumbsHelper';
-import { getTheories } from "../../services/shared.service";
 import { useState, useEffect } from "react";
 import { Button, Tab, Nav, Container, Row, Col, Form } from "react-bootstrap";
 import { useLocation } from "react-router-dom";

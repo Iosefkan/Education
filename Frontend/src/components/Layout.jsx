@@ -13,6 +13,7 @@ const Layout = ({ paths, children }) => {
   const getBreadcrumbs = () => {
     return paths.map((path) => (
       <Breadcrumb.Item
+        style={{ textDecoration: 'none' }}
         linkAs={Link}
         linkProps={{ to: path.to, state: path.state }}
         key={path.id}

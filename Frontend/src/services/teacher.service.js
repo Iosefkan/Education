@@ -246,3 +246,8 @@ export const getUserProtocols = async (practicalId) => {
     const response = await axios.get(`api/Teacher/GetUserProtocols?practicalId=${practicalId}`);
     return response.data;
 }
+
+export const getTheories = async (moduleId) => {
+    const response = await axios.get(`api/Teacher/GetTheories?moduleId=${moduleId}`);
+    return response.data;
+};

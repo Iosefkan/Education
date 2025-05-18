@@ -23,7 +23,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var result = await context.TestResults
             .Include(tr => tr.User)
             .AsNoTracking()
-            .Where(tr => tr.PracticalMaterialId == practicalId)
+            .Where(tr => tr.PracticalMaterialId == practicalId && tr.IsCompleted)
             .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore})
             .ToListAsync();
         return Ok(result);
@@ -66,6 +66,17 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             .AsNoTracking()
             .Where(c => c.PracticalMaterialId == practicalId)
             .Select(c => new { c.Id, c.Name, c.Text })
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetTheories(long moduleId)
+    {
+        var result = await context.TheoreticalMaterials
+            .AsNoTracking()
+            .Where(m => m.ModuleId == moduleId)
+            .Select(m => new { m.Id, m.Name })
             .ToListAsync();
         return Ok(result);
     }

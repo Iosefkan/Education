@@ -47,7 +47,8 @@ public class StudentController(ApplicationContext context) : ControllerBase
         var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
         
         var testResult = await context.TestResults.Where(tr => tr.UserId == userId && tr.PracticalMaterialId == practId).FirstOrDefaultAsync();
-        var isCompleted = testResult is not null;
+        if (testResult is null) return NotFound();
+        var isCompleted = testResult.IsCompleted;
         if (!isCompleted)
         {
             var result = await context.Questions
@@ -79,18 +80,47 @@ public class StudentController(ApplicationContext context) : ControllerBase
         return Ok(new { Answers = answers, IsCompleted = isCompleted, testResult.Score, testResult.MaxScore });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetTestStatus(long practicalId)
+    {
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        
+        var testRes = await context.TestResults.AsNoTracking().FirstOrDefaultAsync(tr => tr.PracticalMaterialId == practicalId && tr.UserId == userId && !tr.IsCompleted);
+        if (testRes is not null) return Ok(new { IsStarted = true });
+        return Ok(new { IsStarted = false });
+    }
+    
+    [HttpPut]
+    public async Task<IActionResult> StartTest(long practicalId)
+    {
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        
+        var testRes = await context.TestResults.FirstOrDefaultAsync(tr => tr.PracticalMaterialId == practicalId && tr.UserId == userId && !tr.IsCompleted);
+        if (testRes is null)
+        {
+            testRes = new TestResult { UserId = userId, PracticalMaterialId = practicalId, IsCompleted = false };
+            await context.TestResults.AddAsync(testRes);
+            await context.SaveChangesAsync();
+        }
+
+        return Ok();
+    }
+
     [HttpPost]
     public async Task<IActionResult> UploadTest([FromBody] CheckTestResultRequest request)
     {
         var login = User?.Identity?.Name;
         if (login is null) return Unauthorized();
         var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        var testResult = await context.TestResults.FirstOrDefaultAsync(tr => tr.PracticalMaterialId == request.PracticalId && tr.UserId == userId && !tr.IsCompleted);
+        if (testResult is null) return BadRequest();
         
-        var testResult = new TestResult
-        {
-            PracticalMaterialId = request.PracticalId,
-            UserId = userId
-        };
+        testResult.IsCompleted = true;
+        testResult.TurnedDate = DateTime.UtcNow;
         
         List<AnswerBase> answers = new();
         foreach (var ans in request.Answers)
@@ -210,5 +240,23 @@ public class StudentController(ApplicationContext context) : ControllerBase
             .Select(c => new { c.Id, c.Name, c.Text, IsAccepted = c.CaseFiles.Any(cf => cf.UserId == userId && cf.IsAccepted)})
             .ToListAsync();
         return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetTheories(long moduleId)
+    {
+        var cannotAccess = await context.PracticalMaterials
+            .AsNoTracking()
+            .Include(pm => pm.TestResults)
+            .AnyAsync(tm => tm.TestResults.Any(tr => !tr.IsCompleted));
+        if (cannotAccess) return Ok(new { CannotAccess = cannotAccess });
+            
+        var result = await context.TheoreticalMaterials
+            .AsNoTracking()
+            .Where(m => m.ModuleId == moduleId)
+            .Select(m => new { m.Id, m.Name })
+            .ToListAsync();
+        
+        return Ok(new { Theories = result, CannotAccess = cannotAccess });
     }
 }

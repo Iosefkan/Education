@@ -7,6 +7,8 @@ import {
   getPracticalQuestions,
   getTestResult,
   getTasks,
+  getTestStatus,
+  startTest,
 } from "../../services/student.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
@@ -56,6 +58,7 @@ const UserPracticalPage = () => {
   ];
 
   const [questions, setQuestions] = useState([]);
+  const [isStarted, setIsStarted] = useState(false);
   const [answers, setAnswers] = useState([]);
   const [isQuestionsLoading, setIsQuestionsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -66,6 +69,11 @@ const UserPracticalPage = () => {
 
   useEffect(() => {
     async function InitQuestions() {
+      let isStarted = await getTestStatus(practId);
+      setIsStarted(isStarted);
+      if (!isStarted) {
+        return;
+      }
       let rec = await getPracticalQuestions(practId);
       setIsResult(rec.isCompleted);
       if (!rec.isCompleted) {
@@ -92,6 +100,7 @@ const UserPracticalPage = () => {
     setIsResult,
     setIsQuestionsLoading,
     setAnswers,
+    setIsStarted,
   ]);
 
   useEffect(() => {
@@ -116,6 +125,27 @@ const UserPracticalPage = () => {
     const testResult = await getTestResult(answers, practId);
     setResult(testResult);
     setIsResult(true);
+  };
+
+  const handleStartTest = async () => {
+    await startTest(practId);
+    let rec = await getPracticalQuestions(practId);
+    setIsResult(rec.isCompleted);
+    if (!rec.isCompleted) {
+      rec = rec.questions.map((q) => {
+        return { ...q, body: JSON.parse(q.body) };
+      });
+      setQuestions(rec);
+      setAnswers(
+        rec.map((q) => {
+          return { id: q.id };
+        })
+      );
+    } else {
+      setResult(rec);
+    }
+    setIsQuestionsLoading(false);
+    setIsStarted(true);
   };
 
   return (
@@ -159,67 +189,84 @@ const UserPracticalPage = () => {
                   <div className="mb-5">
                     <h1>Практический материал "{practTitle}"</h1>
                   </div>
-
-                  {error && (
-                    <Alert variant="danger" className="mb-3">
-                      {error}
-                    </Alert>
-                  )}
-                  {isResult && (
-                    <h3>
-                      <br />
-                      Оценка за тест: {getGrade(result.score, result.maxScore)}
-                      <br />
-                      Выполнено: {result.score.toFixed(2)}/
-                      {result.maxScore.toFixed(2)},{" "}
-                      {((result.score / result.maxScore) * 100).toFixed(2)}%
-                    </h3>
-                  )}
-                  {!isResult && (
+                  {!isStarted && (
                     <Button
                       className="w-100 mb-5"
                       style={{ height: "65px" }}
-                      onClick={checkResult}
+                      onClick={handleStartTest}
                     >
-                      Сдать тест
+                      Начать тест
                     </Button>
                   )}
 
-                  {!isResult && (
-                    <PaginatedData
-                      isLoading={isQuestionsLoading}
-                      length={questions.length}
-                      data={questions}
-                      pageSizeOptions={[5, 10, 15]}
-                    >
-                      <BaseQuestion setAnswers={setAnswers} answers={answers} />
-                    </PaginatedData>
-                  )}
-                  {isResult && (
-                    <PaginatedData
-                      length={result.answers.length}
-                      data={result.answers}
-                      pageSizeOptions={[5, 10, 15]}
-                    >
-                      <BaseAnswer />
-                    </PaginatedData>
-                  )}
+                  {isStarted && (
+                    <>
+                      {error && (
+                        <Alert variant="danger" className="mb-3">
+                          {error}
+                        </Alert>
+                      )}
+                      {isResult && (
+                        <h3>
+                          <br />
+                          Оценка за тест:{" "}
+                          {getGrade(result.score, result.maxScore)}
+                          <br />
+                          Выполнено: {result.score.toFixed(2)}/
+                          {result.maxScore.toFixed(2)},{" "}
+                          {((result.score / result.maxScore) * 100).toFixed(2)}%
+                        </h3>
+                      )}
+                      {!isResult && (
+                        <Button
+                          className="w-100 mb-5"
+                          style={{ height: "65px" }}
+                          onClick={checkResult}
+                        >
+                          Сдать тест
+                        </Button>
+                      )}
 
-                  {error && (
-                    <Alert variant="danger" className="mt-5">
-                      {error}
-                    </Alert>
+                      {!isResult && (
+                        <PaginatedData
+                          isLoading={isQuestionsLoading}
+                          length={questions.length}
+                          data={questions}
+                          pageSizeOptions={[5, 10, 15]}
+                        >
+                          <BaseQuestion
+                            setAnswers={setAnswers}
+                            answers={answers}
+                          />
+                        </PaginatedData>
+                      )}
+                      {isResult && (
+                        <PaginatedData
+                          length={result.answers.length}
+                          data={result.answers}
+                          pageSizeOptions={[5, 10, 15]}
+                        >
+                          <BaseAnswer />
+                        </PaginatedData>
+                      )}
+
+                      {error && (
+                        <Alert variant="danger" className="mt-5">
+                          {error}
+                        </Alert>
+                      )}
+                      {!isResult && (
+                        <Button
+                          className="w-100 my-5"
+                          style={{ height: "65px" }}
+                          onClick={checkResult}
+                        >
+                          Сдать тест
+                        </Button>
+                      )}
+                      {isResult && <div className="mb-5"></div>}
+                    </>
                   )}
-                  {!isResult && (
-                    <Button
-                      className="w-100 my-5"
-                      style={{ height: "65px" }}
-                      onClick={checkResult}
-                    >
-                      Проверить результат
-                    </Button>
-                  )}
-                  {isResult && <div className="mb-5"></div>}
                 </Tab.Pane>
               </Tab.Content>
             </Col>

@@ -12,8 +12,12 @@ public class PracticalMaterial
     public long ModuleId { get; set; }
     [Column("is_public")]
     public bool IsPublic { get; set; }
+    [Column("tries_count")]
+    public int TriesCount { get; set; }
+    
     public Module Module { get; set; }
     
     public List<Case> Cases { get; set; }
     public List<PracticalMaterialBindQuestion> PracticalMaterialBindQuestions { get; set; }
+    public List<TestResult> TestResults { get; set; }
 }

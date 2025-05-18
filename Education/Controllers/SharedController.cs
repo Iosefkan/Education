@@ -24,17 +24,6 @@ public class SharedController(ApplicationContext context) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTheories(long moduleId)
-    {
-        var result = await context.TheoreticalMaterials
-            .AsNoTracking()
-            .Where(m => m.ModuleId == moduleId)
-            .Select(m => new { m.Id, m.Name })
-            .ToListAsync();
-        return Ok(result);
-    }
-
-    [HttpGet]
     public async Task<IActionResult> GetTheoryText(long theoryId)
     {
         var theory = await context.TheoreticalMaterials

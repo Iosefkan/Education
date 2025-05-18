@@ -1,8 +1,7 @@
 import Layout from "../../components/Layout";
 import TestCard from "../../components/cards/TestCard";
 import TheoryCard from "../../components/cards/TheoryCard";
-import { getTheories } from "../../services/shared.service";
-import { getTests } from "../../services/student.service";
+import { getTests, getTheories } from "../../services/student.service";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Tab, Nav, Container, Row, Col } from "react-bootstrap";
@@ -11,7 +10,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserModulePage = () => {
   const [tests, setTests] = useState([]);
-  const [theories, setTheories] = useState([]);
+  const [theories, setTheories] = useState({cannotAccess: true, theories: []});
   const { state } = useLocation();
   const [activeKey, setActiveKey] = useState("theory");
   const { moduleId, moduleTitle } = state;
@@ -81,8 +80,9 @@ const UserModulePage = () => {
 
                   <h3 className="mb-3">Лекционные материалы:</h3>
                   <div className="d-flex flex-wrap justify-content-start align-items-center gap-4">
-                    {theories.length === 0 && <div>Нет лекций</div>}
-                    {theories.map((theory) => (
+                    {theories.cannotAccess && <div>Просмотр лекций недоступен, завершите прохождение теста</div>}
+                    {!theories.cannotAccess && theories.theories.length === 0 && <div>Нет лекций</div>}
+                    {!theories.cannotAccess && theories.theories.map((theory) => (
                       <TheoryCard
                         key={theory.id}
                         id={theory.id}

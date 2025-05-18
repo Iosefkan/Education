@@ -40,3 +40,19 @@ export const getTasks = async (practicalId) => {
     const response = await axios.get(`api/Student/GetTasks?practicalId=${practicalId}`);
     return response.data;
 }
+
+export const getTestStatus = async (practicalId) => {
+    const response = await axios.get(`api/Student/GetTestStatus?practicalId=${practicalId}`);
+    console.log(response.data);
+    return response.data.isStarted;
+};
+
+export const startTest = async (practicalId) => {
+    await axios.put(`api/Student/StartTest?practicalId=${practicalId}`);
+    return true;
+}
+
+export const getTheories = async (moduleId) => {
+    const response = await axios.get(`api/Student/GetTheories?moduleId=${moduleId}`);
+    return response.data;
+};
