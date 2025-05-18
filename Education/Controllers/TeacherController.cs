@@ -89,8 +89,37 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             .Include(cf => cf.Comments)
             .AsNoTracking()
             .Where(cf => cf.CaseId == taskId)
-            .Select(cf => new { cf.Id, cf.Path, Name = cf.Path.GetPublicFileName(), cf.UserId, FullName = cf.User.GetFullName(), IsAccepted = cf.IsAccepted,
-                Comments = cf.Comments.OrderByDescending(c => c.Id).Select(c => new { c.Id, c.IsGenerated, c.Text, c.Created }) })
+            .Select(cf => new { 
+                cf.Id, 
+                cf.Path, 
+                Name = cf.Path.GetPublicFileName(), 
+                cf.UserId, 
+                FullName = cf.User.GetFullName(), 
+                cf.IsAccepted,
+                IsUpdated = cf.Comments.OrderBy(c => c.Id).Last().IsGenerated,
+                Comments = cf.Comments.OrderBy(c => c.Id).Select(c => new { c.Id, c.IsGenerated, c.Text, c.Created }) })
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetPracticalTaskFiles(long practicalId)
+    {
+        var result = await context.CaseFiles
+            .Include(cf => cf.User)
+            .Include(cf => cf.Comments)
+            .Include(cf => cf.Case)
+            .AsNoTracking()
+            .Where(cf => cf.Case.PracticalMaterialId == practicalId)
+            .Select(cf => new { 
+                cf.Id, 
+                cf.Path, 
+                Name = cf.Path.GetPublicFileName(), 
+                cf.UserId, 
+                FullName = cf.User.GetFullName(), 
+                cf.IsAccepted,
+                IsUpdated = cf.Comments.OrderBy(c => c.Id).Last().IsGenerated,
+                Comments = cf.Comments.OrderBy(c => c.Id).Select(c => new { c.Id, c.IsGenerated, c.Text, c.Created }) })
             .ToListAsync();
         return Ok(result);
     }

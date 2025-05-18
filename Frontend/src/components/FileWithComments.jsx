@@ -7,7 +7,6 @@ const FileWithComments = ({ file, onAddComment, onAccept }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleCreateComment = (commentText) => {
-    console.log(file);
     onAddComment(file.id, commentText);
     setShowModal(false);
   };
@@ -29,8 +28,9 @@ const FileWithComments = ({ file, onAddComment, onAccept }) => {
           <Accordion.Header className="borderless mb-3 d-flex justify-content-between gap-2">
             <div className="flex-grow-1">
               <div className="fw-bold">
-                {file.isAccepted && <span className="me-2">✓</span>}
                 Выполнивший студент: {file.fullName}
+                {file.isAccepted && <span className="me-2 text-primary"> (принято)</span>}
+                {!file.isAccepted && file.isUpdated && <span className="me-2 text-primary"> (обновлено)</span>}
               </div>
               <a href={file.path} target="_blank" rel="noopener noreferrer">
                 {file.name}

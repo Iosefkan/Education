@@ -2,6 +2,7 @@ import AccordionMultiSelect from "../../components/AccordionMutiSelect";
 import Layout from "../../components/Layout";
 import TaskCard from "../../components/cards/TaskCard";
 import CreateTaskModal from "../../components/sidebars/CreateTaskModal";
+import FileWithComments from "../../components/FileWithComments";
 import {
   Alert,
   Button,
@@ -25,6 +26,9 @@ import {
   setPublic,
   getTasks,
   getUserProtocols,
+  getPracticalTaskFiles,
+  createComment,
+  setAccepted,
 } from "../../services/teacher.service";
 import getGrade from "../../services/gradingHelper";
 import {
@@ -70,6 +74,37 @@ const MakePracticalPage = () => {
       label: `Практический материал "${practTitle}"`,
     },
   ];
+  const [taskFiles, setTaskFiles] = useState([]);
+
+  useEffect(() => {
+    async function initTaskFiles() {
+      const rec = await getPracticalTaskFiles(practId);
+      setTaskFiles(rec);
+    }
+    initTaskFiles();
+  }, [practId, setTaskFiles]);
+
+  const handleAddComment = async (taskFileId, comment) => {
+    const result = await createComment(taskFileId, comment);
+    setTaskFiles(
+      taskFiles.map((file) => {
+        if (file.id === taskFileId) {
+          file.comments.push(result);
+          file.isUpdated = false;
+        }
+        return file;
+      })
+    );
+  };
+
+  const handleAcceptTaskFile = async (taskFileId) => {
+    await setAccepted(taskFileId);
+    setTaskFiles(
+      taskFiles.map((file) =>
+        file.id === taskFileId ? { ...file, isAccepted: true } : file
+      )
+    );
+  };
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [questions, setQuestions] = useState([]);
@@ -163,6 +198,18 @@ const MakePracticalPage = () => {
     }
   };
 
+  const [selectedFilterType, setSelectedFilterType] = useState("0");
+  const filters = ["Все загрузки", "Принятые", "Обновленные"];
+  const handleFilterTypeChange = (event) => {
+    setSelectedFilterType(event.target.value);
+  };
+  const filteredFiles =
+    selectedFilterType === "0"
+      ? taskFiles
+      : selectedFilterType === "1"
+      ? taskFiles.filter((tf) => tf.isAccepted)
+      : taskFiles.filter((tf) => tf.isUpdated && !tf.isAccepted);
+
   return (
     <Layout paths={paths}>
       <Container fluid className="mt-5">
@@ -183,6 +230,11 @@ const MakePracticalPage = () => {
                     </Nav.Link>
                   </Nav.Item>
                 )}
+                <Nav.Item>
+                  <Nav.Link eventKey="taskUploads">
+                    Выполненные задания
+                  </Nav.Link>
+                </Nav.Item>
               </Nav>
             </Col>
             <Col sm={10}>
@@ -271,6 +323,9 @@ const MakePracticalPage = () => {
                 </Tab.Pane>
                 {isPublic && (
                   <Tab.Pane eventKey="protocol">
+                    <div className="mb-5">
+                      <h1>Практический материал "{practTitle}"</h1>
+                    </div>
                     <ListGroup>
                       {userProtocols.map((prot) => (
                         <Card
@@ -308,6 +363,36 @@ const MakePracticalPage = () => {
                     </ListGroup>
                   </Tab.Pane>
                 )}
+                <Tab.Pane eventKey="taskUploads">
+                  <div className="mb-5">
+                    <h1>Практический материал "{practTitle}"</h1>
+                  </div>
+                  <h3 className="mb-3">
+                    Выполненные задания ({filteredFiles.length})
+                  </h3>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Фильтрация заданий</Form.Label>
+                    <Form.Select
+                      value={selectedFilterType}
+                      onChange={handleFilterTypeChange}
+                      aria-label="Type selection dropdown"
+                    >
+                      <option value="0">{filters[0]}</option>
+                      <option value="1">{filters[1]}</option>
+                      <option value="2">{filters[2]}</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <ListGroup>
+                    {filteredFiles.map((file) => (
+                      <FileWithComments
+                        key={file.id}
+                        file={file}
+                        onAddComment={handleAddComment}
+                        onAccept={() => handleAcceptTaskFile(file.id)}
+                      />
+                    ))}
+                  </ListGroup>
+                </Tab.Pane>
               </Tab.Content>
             </Col>
           </Row>

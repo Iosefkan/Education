@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Accordion, Button, Card, Alert } from "react-bootstrap";
+import {
+  Accordion,
+  Button,
+  Card,
+  Alert,
+  Form,
+  ListGroup,
+} from "react-bootstrap";
 import { FileWord, BodyText } from "react-bootstrap-icons";
 import { useLocation } from "react-router-dom";
 import RichTextEditor from "../../components/RichTextEditor";
@@ -12,15 +19,19 @@ import {
 import { getTaskText } from "../../services/shared.service";
 import Layout from "../../components/Layout";
 import FileWithComments from "../../components/FileWithComments";
-import { getModuleCrumbs, getCourseCrumbs, getPractCrumbs } from '../../services/crumbsHelper';
+import {
+  getModuleCrumbs,
+  getCourseCrumbs,
+  getPractCrumbs,
+} from "../../services/crumbsHelper";
 
 const MakeTheoryMaterialPage = () => {
   const { state } = useLocation();
   const { taskId, taskTitle } = state;
-    const courseCrumbs = getCourseCrumbs();
-    const moduleCrumbs = getModuleCrumbs();
-    const practCrumbs = getPractCrumbs();
-    const paths = [
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const practCrumbs = getPractCrumbs();
+  const paths = [
     {
       active: false,
       to: "/courses",
@@ -84,7 +95,8 @@ const MakeTheoryMaterialPage = () => {
     setTaskFiles(
       taskFiles.map((file) => {
         if (file.id === taskFileId) {
-          file.comments.unshift(result);
+          file.comments.push(result);
+          file.isUpdated = false;
         }
         return file;
       })
@@ -113,6 +125,18 @@ const MakeTheoryMaterialPage = () => {
       )
     );
   };
+
+  const [selectedFilterType, setSelectedFilterType] = useState("0");
+  const filters = ["Все загрузки", "Принятые", "Обновленные"];
+  const handleFilterTypeChange = (event) => {
+    setSelectedFilterType(event.target.value);
+  };
+  const filteredFiles =
+    selectedFilterType === "0"
+      ? taskFiles
+      : selectedFilterType === "1"
+      ? taskFiles.filter((tf) => tf.isAccepted)
+      : taskFiles.filter((tf) => tf.isUpdated && !tf.isAccepted);
 
   return (
     <Layout paths={paths}>
@@ -150,17 +174,31 @@ const MakeTheoryMaterialPage = () => {
             <Accordion.Item eventKey="1">
               <Accordion.Header>
                 <FileWord className="me-2" /> Выполненные задания (
-                {taskFiles.length})
+                {filteredFiles.length})
               </Accordion.Header>
               <Accordion.Body>
-                {taskFiles.map((file) => (
-                  <FileWithComments
-                    key={file.id}
-                    file={file}
-                    onAddComment={handleAddComment}
-                    onAccept={() => handleAcceptTaskFile(file.id)}
-                  />
-                ))}
+                <Form.Group className="mb-3">
+                  <Form.Label>Фильтрация заданий</Form.Label>
+                  <Form.Select
+                    value={selectedFilterType}
+                    onChange={handleFilterTypeChange}
+                    aria-label="Type selection dropdown"
+                  >
+                    <option value="0">{filters[0]}</option>
+                    <option value="1">{filters[1]}</option>
+                    <option value="2">{filters[2]}</option>
+                  </Form.Select>
+                </Form.Group>
+                <ListGroup>
+                  {filteredFiles.map((file) => (
+                    <FileWithComments
+                      key={file.id}
+                      file={file}
+                      onAddComment={handleAddComment}
+                      onAccept={() => handleAcceptTaskFile(file.id)}
+                    />
+                  ))}
+                </ListGroup>
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>

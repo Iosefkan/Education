@@ -150,6 +150,11 @@ export const getTaskFiles = async (taskId) => {
   return response.data;
 };
 
+export const getPracticalTaskFiles = async (practicalId) => {
+  const response = await axios.get(`api/Teacher/GetPracticalTaskFiles?practicalId=${practicalId}`);
+  return response.data;
+};
+
 export const updateTaskText = async (taskId, text) => {
   try {
     await axios.put("api/Teacher/UpdateTaskText", {
@@ -235,13 +240,6 @@ export const updateTheoryTitle = async (theoryId, title) => {
 export const getTests = async (moduleId) => {
   const response = await axios.get(
     `api/Teacher/GetPracticals?moduleId=${moduleId}`
-  );
-  return response.data;
-};
-
-export const getComments = async (taskFileId) => {
-  const response = await axios.get(
-    `api/Teacher/GetTaskFileComments?taskFileId=${taskFileId}`
   );
   return response.data;
 };
