@@ -2,33 +2,50 @@ import Layout from "../../components/Layout";
 import CourseCard from "../../components/cards/CourseCard";
 import CreateCourseModal from "../../components/sidebars/CreateCourseModal";
 import { useState, useEffect } from "react";
-import { deleteCourse, getCourses, createCourse } from "../../services/teacher.service";
+import {
+  deleteCourse,
+  getCourses,
+  createCourse,
+} from "../../services/teacher.service";
 import { Button } from "react-bootstrap";
 
 const CoursesPage = () => {
-    const [courses, setCourses] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const paths = [
+    {
+      active: true,
+      id: 1,
+      to: "/courses",
+      state: {},
+      label: "Курсы",
+    },
+  ];
 
-    useEffect(() => {
-        async function initCourses(){
-            const recCourses = await getCourses();
-            setCourses(recCourses)
-        }
-        initCourses();
-    }, [])
-
-    const handleCreate = async (courseData) => {
-        const newCourse = await createCourse(courseData.date, courseData.description, courseData.name);
-        setCourses([...courses, newCourse])
+  useEffect(() => {
+    async function initCourses() {
+      const recCourses = await getCourses();
+      setCourses(recCourses);
     }
+    initCourses();
+  }, []);
 
-    const handleDelete = async (course) => {
-        await deleteCourse(course.id);
-        setCourses(courses.filter(c => c.id !== course.id))
-    }
+  const handleCreate = async (courseData) => {
+    const newCourse = await createCourse(
+      courseData.date,
+      courseData.description,
+      courseData.name
+    );
+    setCourses([...courses, newCourse]);
+  };
 
-    return (
-    <Layout>
+  const handleDelete = async (course) => {
+    await deleteCourse(course.id);
+    setCourses(courses.filter((c) => c.id !== course.id));
+  };
+
+  return (
+    <Layout paths={paths}>
       <Button className="mb-5" onClick={() => setShowModal(true)}>
         Добавить курс
       </Button>
@@ -40,12 +57,10 @@ const CoursesPage = () => {
       />
 
       <h3 className="mb-3">Созданные курсы:</h3>
-      {courses.length === 0 && (
-            <div>Нет курсов</div>
-        )}
+      {courses.length === 0 && <div>Нет курсов</div>}
       <div className="d-flex flex-wrap flex-row gap-4">
         {courses.map((course) => (
-            <CourseCard
+          <CourseCard
             key={course.id}
             id={course.id}
             title={course.name}
@@ -53,11 +68,11 @@ const CoursesPage = () => {
             canDelete={true}
             dueDate={new Date(course.date)}
             onDelete={() => handleDelete(course)}
-            />
+          />
         ))}
       </div>
     </Layout>
-    );
-}
+  );
+};
 
 export default CoursesPage;

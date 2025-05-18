@@ -25,10 +25,45 @@ import {
   getUserProtocols,
 } from "../../services/teacher.service";
 import getGrade from "../../services/gradingHelper";
+import { getModuleCrumbs, getCourseCrumbs, setPractCrumbs } from '../../services/crumbsHelper';
 
 const MakePracticalPage = () => {
   const { state } = useLocation();
   const { practId, practTitle, moduleId } = state;
+  setPractCrumbs(state);
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/courses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/course",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+    {
+      active: false,
+      to: "/module",
+      id: 3,
+      state: moduleCrumbs,
+      label: `Раздел "${moduleCrumbs.moduleTitle}"`,
+    },
+    {
+      active: true,
+      to: "/makeTest",
+      id: 4,
+      state: state,
+      label: `Практический материал "${practTitle}"`,
+    },
+  ];
+
   const [selectedIds, setSelectedIds] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [userProtocols, setUserProtocols] = useState([]);
@@ -105,7 +140,7 @@ const MakePracticalPage = () => {
   };
 
   return (
-    <Layout>
+    <Layout paths={paths}>
       <Container fluid className="mt-5">
         <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k)}>
           <Row>

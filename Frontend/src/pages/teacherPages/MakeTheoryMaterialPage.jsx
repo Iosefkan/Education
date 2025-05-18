@@ -8,11 +8,44 @@ import { updateTheoryText,
   createTheoryLink, deleteLink,
  } from '../../services/teacher.service';
 import { getTheoryText, getTheoryDocs, getTheoryLinks } from "../../services/shared.service";
+import { getModuleCrumbs, getCourseCrumbs } from '../../services/crumbsHelper';
 import Layout from '../../components/Layout';
 
 const MakeTheoryMaterialPage = () => {
   const { state } = useLocation();
   const { theoryId, theoryTitle } = state;
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/courses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/course",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+    {
+      active: false,
+      to: "/module",
+      id: 3,
+      state: moduleCrumbs,
+      label: `Раздел "${moduleCrumbs.moduleTitle}"`,
+    },
+    {
+      active: true,
+      to: "/makeTheory",
+      id: 4,
+      state: state,
+      label: `Лекция "${theoryTitle}"`,
+    },
+  ];
 
   const [files, setFiles] = useState([]);
   const [showAddDocModal, setShowAddDocModal] = useState(false);
@@ -134,7 +167,7 @@ const MakeTheoryMaterialPage = () => {
   }
 
   return (
-    <Layout>
+    <Layout paths={paths}>
       <Card className="shadow-lg">
         <Card.Header className="bg-light">
           <h2>{theoryTitle}</h2>

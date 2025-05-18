@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Education.DAL;
+using Education.Extensions;
 using Education.Helpers;
 using Education.Models.Requests;
 using Microsoft.AspNetCore.Authentication;
@@ -20,6 +21,7 @@ public class AuthController(ApplicationContext context) : ControllerBase
     {
         var hash = HashHelper.GetSha256Hash(req.Password);
         var user = context.Users
+            .AsNoTracking()
             .Include(u => u.Role)
             .FirstOrDefault(u => u.Login == req.Login && u.Password == hash);
         if (user is null) return Unauthorized();
@@ -34,7 +36,7 @@ public class AuthController(ApplicationContext context) : ControllerBase
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity));
 
-        return Ok(new { Role = user.Role.Name });
+        return Ok(new { Role = user.Role.Name, Username = user.GetFullName() });
     }
     
     [AllowAnonymous]

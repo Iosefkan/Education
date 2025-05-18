@@ -7,7 +7,7 @@ const CreateModuleModal = ({ show, onHide, onCreate }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!title.trim()) newErrors.title = 'Введите название модуля';
+    if (!title.trim()) newErrors.title = 'Введите название раздела';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

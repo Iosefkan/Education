@@ -15,6 +15,7 @@ import {
   deleteQuestion,
   getTests,
 } from "../../services/teacher.service";
+import { setModuleCrumbs, getCourseCrumbs } from '../../services/crumbsHelper';
 import { getTheories } from "../../services/shared.service";
 import { useState, useEffect } from "react";
 import { Button, Tab, Nav, Container, Row, Col, Form } from "react-bootstrap";
@@ -62,6 +63,31 @@ const ModulePage = () => {
   const [showTheoryModal, setShowTheoryModal] = useState(false);
   const { state } = useLocation();
   const { moduleId, moduleTitle } = state;
+  setModuleCrumbs(state);
+  const courseCrumbs = getCourseCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/courses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/course",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+        {
+      active: true,
+      to: "/module",
+      id: 3,
+      state: { moduleId, moduleTitle },
+      label: `Раздел "${moduleTitle}"`,
+    },
+  ];
 
   useEffect(() => {
     async function initTests() {
@@ -165,7 +191,7 @@ const ModulePage = () => {
   };
 
   return (
-    <Layout>
+    <Layout paths={paths}>
       <Container fluid className="mt-5">
         <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k)}>
           <Row>

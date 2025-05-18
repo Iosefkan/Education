@@ -1,62 +1,97 @@
-import { useState, useEffect } from 'react';
-import { Accordion, Card } from 'react-bootstrap';
-import { Link45deg, FileWord, BodyText } from 'react-bootstrap-icons';
+import { useState, useEffect } from "react";
+import { Accordion, Card } from "react-bootstrap";
+import { Link45deg, FileWord, BodyText } from "react-bootstrap-icons";
 import { useLocation } from "react-router-dom";
-import { getTheoryText, getTheoryDocs, getTheoryLinks } from '../../services/shared.service';
-import ReadOnlyRichText from '../../components/ReadOnlyRichText';
-import Layout from '../../components/Layout';
+import {
+  getTheoryText,
+  getTheoryDocs,
+  getTheoryLinks,
+} from "../../services/shared.service";
+import ReadOnlyRichText from "../../components/ReadOnlyRichText";
+import { getModuleCrumbs, getCourseCrumbs } from "../../services/crumbsHelper";
+import Layout from "../../components/Layout";
 
 const UserTheoryMaterialPage = () => {
   const { state } = useLocation();
   const { theoryId, theoryTitle } = state;
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/userCourses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/userCourse",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+    {
+      active: false,
+      to: "/userModule",
+      id: 3,
+      state: moduleCrumbs,
+      label: `Раздел "${moduleCrumbs.moduleTitle}"`,
+    },
+    {
+      active: true,
+      to: "/theory",
+      id: 4,
+      state: state,
+      label: `Лекция "${theoryTitle}"`,
+    },
+  ];
 
   const [files, setFiles] = useState([]);
 
   const [links, setLinks] = useState([]);
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
 
   useEffect(() => {
-    async function initDocs(){
-        const recDocs = await getTheoryDocs(theoryId);
-        setFiles(recDocs)
+    async function initDocs() {
+      const recDocs = await getTheoryDocs(theoryId);
+      setFiles(recDocs);
     }
     initDocs();
-  }, [theoryId, setFiles])
+  }, [theoryId, setFiles]);
 
   useEffect(() => {
-    async function initText(){
-        const recText = await getTheoryText(theoryId);
-        setContent(recText)
+    async function initText() {
+      const recText = await getTheoryText(theoryId);
+      setContent(recText);
     }
     initText();
-  }, [theoryId, setContent])
+  }, [theoryId, setContent]);
 
   useEffect(() => {
-      async function initLinks(){
-          const recLinks = await getTheoryLinks(theoryId);
-          setLinks(recLinks)
-      }
-      initLinks();
-  }, [theoryId, setLinks])
+    async function initLinks() {
+      const recLinks = await getTheoryLinks(theoryId);
+      setLinks(recLinks);
+    }
+    initLinks();
+  }, [theoryId, setLinks]);
 
   return (
-    <Layout>
+    <Layout paths={paths}>
       <Card className="shadow-lg">
         <Card.Header className="bg-light">
           <h2>{theoryTitle}</h2>
         </Card.Header>
 
         <Card.Body>
-          <Accordion defaultActiveKey={['0']} alwaysOpen>
-          <Accordion.Item eventKey="0">
+          <Accordion defaultActiveKey={["0"]} alwaysOpen>
+            <Accordion.Item eventKey="0">
               <Accordion.Header>
                 <BodyText className="me-2" /> Текст лекции
               </Accordion.Header>
               <Accordion.Body>
-                <ReadOnlyRichText 
-                  content={content} 
-                />
+                <ReadOnlyRichText content={content} />
               </Accordion.Body>
             </Accordion.Item>
 
@@ -66,10 +101,15 @@ const UserTheoryMaterialPage = () => {
               </Accordion.Header>
               <Accordion.Body>
                 {files.map((file) => (
-                  <div key={file.id} className="mb-3 d-flex align-items-center gap-2">
+                  <div
+                    key={file.id}
+                    className="mb-3 d-flex align-items-center gap-2"
+                  >
                     <div className="flex-grow-1">
                       <div className="fw-bold">{file.description}</div>
-                      <a href={file.path}><small className="text-muted">{file.name}</small></a>
+                      <a href={file.path}>
+                        <small className="text-muted">{file.name}</small>
+                      </a>
                     </div>
                   </div>
                 ))}
@@ -82,22 +122,22 @@ const UserTheoryMaterialPage = () => {
               </Accordion.Header>
               <Accordion.Body>
                 <ul className="mb-0">
-                {links.map((link) => (
-                <li key={link.id}>
-                  <div className="mb-3 d-flex justify-content-between align-items-start gap-2">
-                    <div className="flex-grow-1">
-                      <a 
-                        href={link.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="fw-bold text-break"
-                      >
-                        {link.description}
-                      </a>
-                    </div>
-                  </div>
-                </li>
-                ))}
+                  {links.map((link) => (
+                    <li key={link.id}>
+                      <div className="mb-3 d-flex justify-content-between align-items-start gap-2">
+                        <div className="flex-grow-1">
+                          <a
+                            href={link.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="fw-bold text-break"
+                          >
+                            {link.description}
+                          </a>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </Accordion.Body>
             </Accordion.Item>

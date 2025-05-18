@@ -54,7 +54,7 @@ const ModuleCard = ({ id, title, canDelete = false, onDelete, isStudent = false 
           <Modal.Title>Подтверждение удаления</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Вы уверены, что хотите удалить модуль "{title}"?
+          Вы уверены, что хотите удалить раздел "{title}"?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>

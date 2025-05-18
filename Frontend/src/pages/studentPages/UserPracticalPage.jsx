@@ -6,16 +6,55 @@ import { useState, useEffect } from "react";
 import {
   getPracticalQuestions,
   getTestResult,
-  getTasks
+  getTasks,
 } from "../../services/student.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
 import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
 import getGrade from "../../services/gradingHelper";
+import {
+  getModuleCrumbs,
+  getCourseCrumbs,
+  setPractCrumbs,
+} from "../../services/crumbsHelper";
 
 const UserPracticalPage = () => {
   const { state } = useLocation();
   const { practId, practTitle } = state;
+  setPractCrumbs(state);
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/userCourses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/userCourse",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+    {
+      active: false,
+      to: "/userModule",
+      id: 3,
+      state: moduleCrumbs,
+      label: `Раздел "${moduleCrumbs.moduleTitle}"`,
+    },
+    {
+      active: true,
+      to: "/test",
+      id: 4,
+      state: state,
+      label: `Практический материал "${practTitle}"`,
+    },
+  ];
+
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [isQuestionsLoading, setIsQuestionsLoading] = useState(true);
@@ -29,7 +68,7 @@ const UserPracticalPage = () => {
     async function InitQuestions() {
       let rec = await getPracticalQuestions(practId);
       setIsResult(rec.isCompleted);
-      if (!rec.isCompleted){
+      if (!rec.isCompleted) {
         rec = rec.questions.map((q) => {
           return { ...q, body: JSON.parse(q.body) };
         });
@@ -39,14 +78,21 @@ const UserPracticalPage = () => {
             return { id: q.id };
           })
         );
-      }
-      else{
+      } else {
         setResult(rec);
       }
       setIsQuestionsLoading(false);
     }
     InitQuestions();
-  }, [practId, isResult, setQuestions, setResult, setIsResult, setIsQuestionsLoading, setAnswers]);
+  }, [
+    practId,
+    isResult,
+    setQuestions,
+    setResult,
+    setIsResult,
+    setIsQuestionsLoading,
+    setAnswers,
+  ]);
 
   useEffect(() => {
     async function InitTasks() {
@@ -73,7 +119,7 @@ const UserPracticalPage = () => {
   };
 
   return (
-    <Layout>
+    <Layout paths={paths}>
       <Container fluid className="mt-5">
         <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k)}>
           <Row>
@@ -124,7 +170,9 @@ const UserPracticalPage = () => {
                       <br />
                       Оценка за тест: {getGrade(result.score, result.maxScore)}
                       <br />
-                      Выполнено: {result.score.toFixed(2)}/{result.maxScore.toFixed(2)}, {((result.score / result.maxScore) * 100).toFixed(2)}%
+                      Выполнено: {result.score.toFixed(2)}/
+                      {result.maxScore.toFixed(2)},{" "}
+                      {((result.score / result.maxScore) * 100).toFixed(2)}%
                     </h3>
                   )}
                   {!isResult && (
@@ -171,9 +219,7 @@ const UserPracticalPage = () => {
                       Проверить результат
                     </Button>
                   )}
-                  {isResult && (
-                    <div className="mb-5"></div>
-                  )}
+                  {isResult && <div className="mb-5"></div>}
                 </Tab.Pane>
               </Tab.Content>
             </Col>

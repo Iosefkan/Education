@@ -15,11 +15,56 @@ import Layout from "../../components/Layout";
 import ReadOnlyRichText from "../../components/ReadOnlyRichText";
 import { useLocation } from "react-router-dom";
 import MessageBubble from "../../components/MessageBubble";
+import {
+  getModuleCrumbs,
+  getCourseCrumbs,
+  getPractCrumbs,
+} from "../../services/crumbsHelper";
 
 const BorderlessAccordion = () => {
   const [content, setContent] = useState("");
   const { state } = useLocation();
   const { taskId, taskTitle } = state;
+  const courseCrumbs = getCourseCrumbs();
+  const moduleCrumbs = getModuleCrumbs();
+  const practCrumbs = getPractCrumbs();
+  const paths = [
+    {
+      active: false,
+      to: "/userCourses",
+      id: 1,
+      state: {},
+      label: "Курсы",
+    },
+    {
+      active: false,
+      to: "/userCourse",
+      id: 2,
+      state: courseCrumbs,
+      label: `Курс "${courseCrumbs.courseTitle}"`,
+    },
+    {
+      active: false,
+      to: "/userModule",
+      id: 3,
+      state: moduleCrumbs,
+      label: `Раздел "${moduleCrumbs.moduleTitle}"`,
+    },
+    {
+      active: false,
+      to: "/test",
+      id: 4,
+      state: practCrumbs,
+      label: `Практический материал "${practCrumbs.practTitle}"`,
+    },
+    {
+      active: true,
+      to: "/task",
+      id: 5,
+      state: state,
+      label: `Задание "${taskTitle}"`,
+    },
+  ];
 
   useEffect(() => {
     async function initText() {
@@ -77,7 +122,7 @@ const BorderlessAccordion = () => {
   };
 
   return (
-    <Layout>
+    <Layout paths={paths}>
       <Card className="shadow-lg">
         <Card.Header className="bg-light">
           <h2>

@@ -6,10 +6,15 @@ export const login = async (login, password) => {
     password,
   });
   localStorage.setItem('userRole', response.data.role)
+  localStorage.setItem('username', response.data.username)
 };
 
 export const getRole = () => {
   return localStorage.getItem('userRole');
+}
+
+export const getName = () => {
+  return localStorage.getItem('username');
 }
 
 export const isTeacher = () => {
