@@ -31,7 +31,7 @@ public class SharedController(ApplicationContext context) : ControllerBase
             .FirstOrDefaultAsync(m => m.Id == theoryId);
         if (theory is null) return BadRequest();
 
-        return Ok(new { theory.Text });
+        return Ok(new { theory.Text, theory.Name });
     }
 
     [HttpGet]

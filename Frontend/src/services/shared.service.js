@@ -5,14 +5,10 @@ export const getModules = async (courseId) => {
     return response.data;
 };
 
-export const getTheories = async (moduleId) => {
-    const response = await axios.get(`api/Shared/GetTheories?moduleId=${moduleId}`);
-    return response.data;
-};
-
-export const getTheoryText = async (theoryId) => {
+export const getTheoryText = async (theoryId, textOnly = true) => {
     const response = await axios.get(`api/Shared/GetTheoryText?theoryId=${theoryId}`);
-    return response.data.text
+    if (textOnly) return response.data.text
+    return response.data;
 }
 
 export const getTaskText = async (taskId) => {

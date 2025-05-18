@@ -227,7 +227,6 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         
         await context.SaveChangesAsync();
 
-
         var courseBinds = request.UserIds.Select(studId => new CourseBindUser()
         {
             CourseId = request.CourseId,
@@ -238,6 +237,16 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         
         await context.SaveChangesAsync();
         
+        return Ok();
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateTheoryTitle([FromBody] UpdateTheoryTitleRequest request)
+    {
+        var theory = await context.TheoreticalMaterials.FirstOrDefaultAsync(m => m.Id == request.TheoryId);
+        if (theory is null) return BadRequest();
+        theory.Name = request.Title;
+        await context.SaveChangesAsync();
         return Ok();
     }
 
