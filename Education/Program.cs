@@ -6,10 +6,12 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-/*builder.WebHost.ConfigureKestrel(cfg =>
+var port = builder.Configuration.GetValue<int>("Port");
+
+builder.WebHost.UseKestrel().ConfigureKestrel(cfg =>
 {
-    cfg.ListenAnyIP(8000);
-});*/
+    cfg.ListenAnyIP(port);
+});
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -39,4 +41,8 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.Run("http://localhost:8000");
+app.UseStaticFiles();
+
+app.MapFallbackToFile("index.html");
+
+app.Run();

@@ -24,4 +24,10 @@
       <Folder Include="Files\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\assets\index-CDyBsAvB.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\assets\index-D3jOM7ne.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\index.html" />
+    </ItemGroup>
+
 </Project>
