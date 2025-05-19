@@ -119,6 +119,29 @@ export const saveUsers = async (courseId, selectedUsers) => {
   }
 };
 
+export const getPracticalUsers = async (practicalId) => {
+  try {
+    const result = await axios.get(
+      `api/Teacher/GetPracticalStudents?practicalId=${practicalId}`
+    );
+    return result.data;
+  } catch {
+    return [];
+  }
+};
+
+export const savePracticalUsers = async (practicalId, selectedUsers) => {
+  try {
+    await axios.put("api/Teacher/UpdatePracticalStudents", {
+      practicalId,
+      userIds: selectedUsers,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const createTest = async (moduleId, name) => {
   const response = await axios.post("api/Teacher/CreatePractical", {
     moduleId,

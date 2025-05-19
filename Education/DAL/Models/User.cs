@@ -24,4 +24,5 @@ public class User
     public List<Course> Courses { get; set; }
     public List<CaseFile> CaseFiles { get; set; }
     public List<CourseBindUser> CourseBindUsers { get; set; }
+    public List<PracticalBindUser> PracticalBindUsers { get; set; }
 }

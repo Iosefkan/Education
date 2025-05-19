@@ -20,4 +20,5 @@ public class PracticalMaterial
     public List<Case> Cases { get; set; }
     public List<PracticalMaterialBindQuestion> PracticalMaterialBindQuestions { get; set; }
     public List<TestResult> TestResults { get; set; }
+    public List<PracticalBindUser> PracticalBindUsers { get; set; }
 }

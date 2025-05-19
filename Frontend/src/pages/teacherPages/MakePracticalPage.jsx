@@ -29,6 +29,8 @@ import {
   getPracticalTaskFiles,
   createComment,
   setAccepted,
+  getPracticalUsers,
+  savePracticalUsers
 } from "../../services/teacher.service";
 import getGrade from "../../services/gradingHelper";
 import {
@@ -37,6 +39,7 @@ import {
   setPractCrumbs,
 } from "../../services/crumbsHelper";
 import "../../css/numInput.css";
+import MultiSelectSearch from "../../components/MultiSelectSearch";
 
 const MakePracticalPage = () => {
   const { state } = useLocation();
@@ -210,6 +213,37 @@ const MakePracticalPage = () => {
       ? taskFiles.filter((tf) => tf.isAccepted)
       : taskFiles.filter((tf) => tf.isUpdated && !tf.isAccepted);
 
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  useEffect(() => {
+    async function initUsers() {
+      const recUsers = await getPracticalUsers(practId);
+      setUsers(recUsers);
+      const firstSelected = recUsers
+        .filter((u) => u.isEnrolled)
+        .map((u) => u.value);
+      setSelectedUsers(firstSelected);
+    }
+    initUsers();
+  }, [practId, setSelectedUsers, setUsers]);
+  
+  const handleSaveEnrolledUsers = async () => {
+    const result = await savePracticalUsers(practId, selectedUsers);
+    if (result) {
+      setSaveMessage({
+        isError: false,
+        message: "Записанные студенты обновлены",
+      });
+    } else {
+      setSaveMessage({
+        isError: true,
+        message: "Ошибка при обновлении записанных студентов",
+      });
+    }
+
+    setTimeout(() => setSaveMessage({}), 5000);
+  };
+
   return (
     <Layout paths={paths}>
       <Container fluid className="mt-5">
@@ -234,6 +268,9 @@ const MakePracticalPage = () => {
                   <Nav.Link eventKey="taskUploads">
                     Выполненные задания
                   </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="users">Записанные студенты</Nav.Link>
                 </Nav.Item>
               </Nav>
             </Col>
@@ -392,6 +429,27 @@ const MakePracticalPage = () => {
                       />
                     ))}
                   </ListGroup>
+                </Tab.Pane>
+                <Tab.Pane eventKey="users">
+                  {saveMessage.message && (
+                    <Alert
+                      variant={saveMessage.isError ? "danger" : "success"}
+                      className="mt-3"
+                    >
+                      {saveMessage.message}
+                    </Alert>
+                  )}
+                  <Button
+                    className="mb-3"
+                    onClick={() => handleSaveEnrolledUsers()}
+                  >
+                    Сохранить изменения
+                  </Button>
+                  <MultiSelectSearch
+                    className="mb-10"
+                    options={users}
+                    onSelectionChange={(selected) => setSelectedUsers(selected)}
+                  />
                 </Tab.Pane>
               </Tab.Content>
             </Col>

@@ -242,10 +242,15 @@ public class StudentController(ApplicationContext context) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetPracticals(long moduleId)
     {
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        
         var result = await context.PracticalMaterials
             .AsNoTracking()
-            .Where(m => m.ModuleId == moduleId && m.IsPublic)
-            .Select(m => new { m.Id, m.Name })
+            .Include(pm => pm.PracticalBindUsers)
+            .Where(pm => pm.ModuleId == moduleId && pm.IsPublic && pm.PracticalBindUsers.Any(pb => pb.UserId == userId))
+            .Select(pm => new { pm.Id, pm.Name })
             .ToListAsync();
         return Ok(result);
     }

@@ -143,6 +143,31 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     }
     
     [HttpGet]
+    public async Task<IActionResult> GetPracticalStudents(long practicalId)
+    {
+        var courseId = await context.PracticalMaterials
+            .Include(pm => pm.Module)
+            .Where(pm => pm.Id == practicalId)
+            .Select(pm => pm.Module.CourseId)
+            .FirstOrDefaultAsync();
+        
+        var result = await context.Users
+            .Include(u => u.Role)
+            .Include(u => u.PracticalBindUsers)
+            .Include(u => u.CourseBindUsers)
+            .Where(u => u.Role.Name == RoleConstants.Student && u.CourseBindUsers.Any(c => c.UserId == u.Id && c.CourseId == courseId))
+            .AsNoTracking()
+            .Select(u => new
+            {
+                Value = u.Id,
+                Label = u.GetFullName(),
+                IsEnrolled = u.PracticalBindUsers.Any(c => c.PracticalMaterialId == practicalId),
+            })
+            .ToListAsync();
+        return Ok(result);
+    }
+    
+    [HttpGet]
     public async Task<IActionResult> GetQuestions(long moduleId)
     {
         var result = await context.Questions
@@ -263,6 +288,46 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         }).ToList();
 
         await context.CourseBindUsers.AddRangeAsync(courseBinds);
+        
+        await context.SaveChangesAsync();
+        
+        return Ok();
+    }
+    
+    [HttpPut]
+    public async Task<IActionResult> UpdatePracticalStudents([FromBody] UpdatePracticalStudentsRequest request)
+    {
+        var curStudentOnPractical = await context.Users
+            .Include(u => u.Role)
+            .Include(u => u.PracticalBindUsers)
+            .Where(u => u.Role.Name == RoleConstants.Student && u.PracticalBindUsers.Any(c => c.PracticalMaterialId == request.PracticalId))
+            .ToListAsync();
+
+        foreach (var student in curStudentOnPractical)
+        {
+            if (!request.UserIds.Contains(student.Id))
+            {
+                var practicalBind = await context.PracticalBindUsers.FirstOrDefaultAsync(c => c.PracticalMaterialId == request.PracticalId && c.UserId == student.Id);
+                if (practicalBind is not null)
+                {
+                    context.PracticalBindUsers.Remove(practicalBind);
+                }
+            }
+            else
+            {
+                request.UserIds.Remove(student.Id);
+            }
+        }
+        
+        await context.SaveChangesAsync();
+
+        var practicalBinds = request.UserIds.Select(studId => new PracticalBindUser()
+        {
+            PracticalMaterialId = request.PracticalId,
+            UserId = studId
+        }).ToList();
+
+        await context.PracticalBindUsers.AddRangeAsync(practicalBinds);
         
         await context.SaveChangesAsync();
         
