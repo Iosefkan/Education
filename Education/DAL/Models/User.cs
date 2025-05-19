@@ -19,8 +19,6 @@ public class User
     [Column("role_id")]
     public long RoleId { get; set; }
     public Role Role { get; set; }
-    
-    public List<Answer> Answers { get; set; }
     public List<Course> Courses { get; set; }
     public List<CaseFile> CaseFiles { get; set; }
     public List<CourseBindUser> CourseBindUsers { get; set; }
