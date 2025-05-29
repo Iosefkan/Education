@@ -8,6 +8,7 @@ const TaskCard = ({
   id,
   title,
   isAccepted = false,
+  isUpdated = false,
   canDelete = false,
   onDelete,
   isStudent = false,
@@ -37,6 +38,7 @@ const TaskCard = ({
           <Card.Title className="mb-0 text-wrap">
             {title}
             {isStudent && isAccepted && <span className="text-primary"> (выполнено)</span>}
+            {isStudent && !isAccepted && isUpdated && <span className="text-primary"> (обновлено)</span>}
           </Card.Title>
           {canDelete && (
             <div onClick={(e) => e.stopPropagation()}>

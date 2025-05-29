@@ -23,7 +23,6 @@ import {
 } from "../../services/student.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
-import getGrade from "../../services/gradingHelper";
 import {
   getModuleCrumbs,
   getCourseCrumbs,
@@ -205,6 +204,7 @@ const UserPracticalPage = () => {
                         id={task.id}
                         title={task.name}
                         isAccepted={task.isAccepted}
+                        isUpdated={task.isUpdated}
                         canDelete={false}
                         isStudent={true}
                       />
@@ -304,7 +304,7 @@ const UserPracticalPage = () => {
                           <Card.Title>Попытка №{prot.tryNumber}</Card.Title>
                         </Card.Header>
                         <Card.Body>
-                          Оценка за тест: {getGrade(prot.score, prot.maxScore)}
+                          Оценка за тест: {prot.grade}
                           <br />
                           Выполнено: {prot.score.toFixed(2)}/
                           {prot.maxScore.toFixed(2)},{" "}

@@ -130,6 +130,9 @@ const BorderlessAccordion = () => {
             {task?.isAccepted && (
               <span className="text-primary"> (выполнено)</span>
             )}
+            {!task?.isAccepted && task?.isUpdated && (
+              <span className="text-primary"> (обновлено)</span>
+            )}
           </h2>
         </Card.Header>
 

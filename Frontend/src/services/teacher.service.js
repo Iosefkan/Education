@@ -223,12 +223,15 @@ export const getPractAllQuestion = async (moduleId, practId) => {
   return response.data;
 };
 
-export const updatePractQuestions = async (practicalId, questionIds, triesCount) => {
+export const updatePractQuestions = async (practicalId, questionIds, triesCount, percentForFive, percentForFour, percentForThree) => {
   try {
     await axios.put("api/Teacher/UpdatePracticalMaterialQuestions", {
       practicalId,
       questionIds,
-      triesCount
+      triesCount,
+      percentForFive,
+      percentForFour,
+      percentForThree
     });
     return true;
   } catch {

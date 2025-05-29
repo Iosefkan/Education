@@ -22,9 +22,11 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     {
         var result = await context.TestResults
             .Include(tr => tr.User)
+            .Include(tr => tr.PracticalMaterial)
             .AsNoTracking()
             .Where(tr => tr.PracticalMaterialId == practicalId && tr.IsCompleted)
-            .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore, tr.TryNumber })
+            .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore, tr.TryNumber, 
+                Grade = ScoreHelper.GetGrade(tr.Score, tr.MaxScore, tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour, tr.PracticalMaterial.PercentForThree) })
             .ToListAsync();
         return Ok(result);
     }
@@ -32,7 +34,16 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetTestProtocol(long testResultId)
     {
-        var testResult = await context.TestResults.Where(tr => tr.Id == testResultId).FirstOrDefaultAsync();
+        var testResult = await context.TestResults
+            .AsNoTracking()
+            .Include(tr => tr.PracticalMaterial)
+            .Where(tr => tr.Id == testResultId)
+            .Select(tr => new
+            {
+                tr.Id, tr.Score, tr.MaxScore,
+                Grade = ScoreHelper.GetGrade(tr.Score, tr.MaxScore, tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour, tr.PracticalMaterial.PercentForThree)
+            })
+            .FirstOrDefaultAsync();
         if (testResult is null) return NotFound();
         
         JsonSerializerOptions options = new() { AllowOutOfOrderMetadataProperties = true };
@@ -44,7 +55,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var answers = answersDb
             .Select(a => JsonSerializer.Deserialize<AnswerBase>(a.Answers, options)).ToList();
             
-        return Ok(new { Answers = answers, testResult.Score, testResult.MaxScore });
+        return Ok(new { Answers = answers, testResult.Score, testResult.MaxScore, testResult.Grade });
     }
     
     [HttpGet]
@@ -206,7 +217,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var practical = await context.PracticalMaterials.FirstOrDefaultAsync(pm => pm.Id == practId);
         if (practical is null) return NotFound();
         
-        return Ok(new { Questions = result, practical.IsPublic, practical.TriesCount });
+        return Ok(new { Questions = result, practical.IsPublic, practical.TriesCount, practical.PercentForFive, practical.PercentForFour, practical.PercentForThree });
     }
 
     [HttpGet]
@@ -351,6 +362,9 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var practical = await context.PracticalMaterials.FirstOrDefaultAsync(pm => pm.Id == request.PracticalId);
         if (practical is null) return BadRequest();
         practical.TriesCount = request.TriesCount;
+        practical.PercentForFive = request.PercentForFive;
+        practical.PercentForFour = request.PercentForFour;
+        practical.PercentForThree = request.PercentForThree;
         
         var curTestQuestions = await context.PracticalMaterialBindQuestions
             .Where(u => u.PracticalMaterialId == request.PracticalId)
@@ -435,6 +449,8 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         var taskFile = await context.CaseFiles.FirstOrDefaultAsync(f => f.Id == taskFileId);
         if (taskFile is null) return BadRequest();
         taskFile.IsAccepted = true;
+        // TODO: доделать
+        //taskFile.Grade = grade;
         await context.SaveChangesAsync();
         return Ok();
     }
@@ -460,6 +476,9 @@ public class TeacherController(ApplicationContext context) : ControllerBase
             ModuleId = request.ModuleId,
             Name = request.Name,
             TriesCount = 1,
+            PercentForFive = 90,
+            PercentForFour = 75,
+            PercentForThree = 60
         };
         await context.PracticalMaterials.AddAsync(practical);
         await context.SaveChangesAsync();

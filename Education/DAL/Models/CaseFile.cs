@@ -17,6 +17,8 @@ public class CaseFile
     
     [Column("is_accepted")]
     public bool IsAccepted { get; set; }
+    [Column("grade")]
+    public int Grade { get; set; }
     
     public List<CaseFileComment> Comments { get; set; }
 }

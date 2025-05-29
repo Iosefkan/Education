@@ -4,7 +4,6 @@ import PaginatedData from "../../components/PaginatedData";
 import BaseAnswer from "../../components/questionAnswers/BaseAnswer";
 import Layout from "../../components/Layout";
 import { getTestProtocol } from "../../services/teacher.service";
-import getGrade from "../../services/gradingHelper";
 import {
   getModuleCrumbs,
   getCourseCrumbs,
@@ -75,7 +74,7 @@ const TestProtocolPage = () => {
         <>
           <h5 className="mb-3">
             <br />
-            Оценка за тест: {getGrade(result.score, result.maxScore)}
+            Оценка за тест: {result.grade}
             <br />
             Выполнено: {result.score.toFixed(2)}/{result.maxScore.toFixed(2)},{" "}
             {((result.score / result.maxScore) * 100).toFixed(2)}%

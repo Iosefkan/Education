@@ -32,7 +32,6 @@ import {
   getPracticalUsers,
   savePracticalUsers
 } from "../../services/teacher.service";
-import getGrade from "../../services/gradingHelper";
 import {
   getModuleCrumbs,
   getCourseCrumbs,
@@ -118,6 +117,9 @@ const MakePracticalPage = () => {
   const [saveMessage, setSaveMessage] = useState({});
   const [activeKey, setActiveKey] = useState("tasks");
   const [triesCount, setTriesCount] = useState(1);
+  const [percentForFive, setPercentForFive] = useState(90);
+  const [percentForFour, setPercentForFour] = useState(75);
+  const [percentForThree, setPercentForThree] = useState(60);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -125,6 +127,9 @@ const MakePracticalPage = () => {
       let recQuestions = await getPractAllQuestion(moduleId, practId);
       setIsPublic(recQuestions.isPublic);
       setTriesCount(recQuestions.triesCount);
+      setPercentForFive(recQuestions.percentForFive);
+      setPercentForFour(recQuestions.percentForFour);
+      setPercentForThree(recQuestions.percentForThree);
       recQuestions = recQuestions.questions.map((q) => {
         return { ...q, body: JSON.parse(q.body) };
       });
@@ -151,7 +156,7 @@ const MakePracticalPage = () => {
   }, [isPublic, practId, setUserProtocols]);
 
   const handleUpdateTestQuestions = async () => {
-    const result = await updatePractQuestions(practId, selectedIds, triesCount);
+    const result = await updatePractQuestions(practId, selectedIds, triesCount, percentForFive, percentForFour, percentForThree);
     if (result) {
       setSaveMessage({ isError: false, message: "Тест обновлен" });
     } else {
@@ -198,6 +203,16 @@ const MakePracticalPage = () => {
     }
     if (e.target.value > 10) {
       e.target.value = 10;
+    }
+  };
+
+    const validatePercent = (e) => {
+    e.target.value = Number(e.target.value);
+    if (e.target.value < 0) {
+      e.target.value = 0;
+    }
+    if (e.target.value > 100) {
+      e.target.value = 100;
     }
   };
 
@@ -351,6 +366,60 @@ const MakePracticalPage = () => {
                     />
                   </FloatingLabel>
 
+                  <FloatingLabel
+                    controlId="five"
+                    label="Процент выполнения на оценку 5"
+                    className="mb-3"
+                  >
+                    <Form.Control
+                      type="number"
+                      size="lg"
+                      className="no-spinners"
+                      readOnly={isPublic}
+                      value={percentForFive}
+                      onChange={(e) => {
+                        validatePercent(e);
+                        setPercentForFive(e.target.value);
+                      }}
+                    />
+                  </FloatingLabel>
+
+                  <FloatingLabel
+                    controlId="four"
+                    label="Процент выполнения на оценку 4"
+                    className="mb-3"
+                  >
+                    <Form.Control
+                      type="number"
+                      size="lg"
+                      className="no-spinners"
+                      readOnly={isPublic}
+                      value={percentForFour}
+                      onChange={(e) => {
+                        validatePercent(e);
+                        setPercentForFour(e.target.value);
+                      }}
+                    />
+                  </FloatingLabel>
+
+                  <FloatingLabel
+                    controlId="three"
+                    label="Процент выполнения на оценку 3"
+                    className="mb-3"
+                  >
+                    <Form.Control
+                      type="number"
+                      size="lg"
+                      className="no-spinners"
+                      readOnly={isPublic}
+                      value={percentForThree}
+                      onChange={(e) => {
+                        validatePercent(e);
+                        setPercentForThree(e.target.value);
+                      }}
+                    />
+                  </FloatingLabel>
+
                   <AccordionMultiSelect
                     className="mb-10"
                     isReadonly={isPublic}
@@ -385,7 +454,7 @@ const MakePracticalPage = () => {
                           </Card.Header>
                           <Card.Body>
                             Оценка за тест:{" "}
-                            {getGrade(prot.score, prot.maxScore)}
+                            {prot.grade}
                             <br />
                             Выполнено: {prot.score.toFixed(2)}/
                             {prot.maxScore.toFixed(2)},{" "}

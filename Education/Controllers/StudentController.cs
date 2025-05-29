@@ -48,9 +48,14 @@ public class StudentController(ApplicationContext context) : ControllerBase
         
         var result = await context.TestResults
             .Include(tr => tr.User)
+            .Include(tr => tr.PracticalMaterial)
             .AsNoTracking()
             .Where(tr => tr.PracticalMaterialId == practicalId && tr.IsCompleted && tr.UserId == userId)
-            .Select(tr => new { tr.Id, tr.UserId, tr.Score, tr.MaxScore, tr.TryNumber })
+            .Select(tr => new
+            {
+                tr.Id, tr.UserId, tr.Score, tr.MaxScore, tr.TryNumber,
+                Grade = ScoreHelper.GetGrade(tr.Score, tr.MaxScore, tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour, tr.PracticalMaterial.PercentForThree)
+            })
             .ToListAsync();
         return Ok(result);
     }
@@ -58,7 +63,16 @@ public class StudentController(ApplicationContext context) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetProtocol(long testResultId)
     {
-        var testResult = await context.TestResults.Where(tr => tr.Id == testResultId).FirstOrDefaultAsync();
+        var testResult = await context.TestResults
+            .AsNoTracking()
+            .Include(tr => tr.PracticalMaterial)
+            .Where(tr => tr.Id == testResultId)
+            .Select(tr => new
+            {
+                tr.Id, tr.Score, tr.MaxScore, tr.IsCompleted, tr.TryNumber,
+                Grade = ScoreHelper.GetGrade(tr.Score, tr.MaxScore, tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour, tr.PracticalMaterial.PercentForThree)
+            })
+            .FirstOrDefaultAsync();
         if (testResult is null or { IsCompleted: false}) return NotFound();
         
         JsonSerializerOptions options = new() { AllowOutOfOrderMetadataProperties = true };
@@ -70,7 +84,10 @@ public class StudentController(ApplicationContext context) : ControllerBase
         var answers = answersDb
             .Select(a => JsonSerializer.Deserialize<AnswerBase>(a.Answers, options)).ToList();
             
-        return Ok(new { Answers = answers, testResult.TryNumber, testResult.Score, testResult.MaxScore });
+        return Ok(new
+        {
+            Answers = answers, testResult.TryNumber, testResult.Score, testResult.MaxScore, testResult.Grade
+        });
     }
     
     [HttpGet]
@@ -190,11 +207,25 @@ public class StudentController(ApplicationContext context) : ControllerBase
         var comments = await context.CaseFileComments
             .AsNoTracking()
             .Where(cfc => cfc.CaseFileId == taskFile.Id && !cfc.IsGenerated)
-            .OrderByDescending(cfc => cfc.Id)
+            .OrderBy(cfc => cfc.Id)
             .Select(cfc => new {cfc.Id, cfc.Created, cfc.Text})
             .ToListAsync();
         
-        return Ok(new { taskFile.Path, taskFile.Id, Name = taskFile.Path.GetPublicFileName(), Comments = comments, taskFile.IsAccepted });
+        var isUpdated = await context.CaseFileComments
+            .AsNoTracking()
+            .Where(cfc => cfc.CaseFileId == taskFile.Id)
+            .OrderBy(cfc => cfc.Id)
+            .Select(cfc => cfc.IsGenerated)
+            .LastOrDefaultAsync();
+        
+        return Ok(new { 
+            taskFile.Path, 
+            taskFile.Id, 
+            Name = taskFile.Path.GetPublicFileName(), 
+            Comments = comments, 
+            taskFile.IsAccepted,
+            IsUpdated = isUpdated
+        });
     }
 
     [HttpPut]
@@ -236,7 +267,11 @@ public class StudentController(ApplicationContext context) : ControllerBase
         await context.CaseFileComments.AddAsync(taskFileComment);
         await context.SaveChangesAsync();
         
-        return Ok(new { taskFile.Id, taskFile.Path, Name = taskFile.Path.GetPublicFileName(), taskFile.IsAccepted });
+        return Ok(new
+        {
+            taskFile.Id, taskFile.Path, Name = taskFile.Path.GetPublicFileName(), taskFile.IsAccepted,
+            IsUpdated = false
+        });
     }
     
     [HttpGet]
@@ -267,7 +302,11 @@ public class StudentController(ApplicationContext context) : ControllerBase
             .Include(c => c.CaseFiles)
             .AsNoTracking()
             .Where(c => c.PracticalMaterialId == practicalId)
-            .Select(c => new { c.Id, c.Name, c.Text, IsAccepted = c.CaseFiles.Any(cf => cf.UserId == userId && cf.IsAccepted)})
+            .Select(c => new { c.Id, c.Name, c.Text,
+                IsAccepted = c.CaseFiles.Any(cf => cf.UserId == userId && cf.IsAccepted),
+                IsUpdated = c.CaseFiles.Any(cf => cf.UserId == userId && cf.Comments.OrderBy(cff => cff.Id).Last().IsGenerated),
+                Grade = c.CaseFiles.Where(cf => cf.UserId == userId).Select(cf => cf.Grade).FirstOrDefault(),
+            })
             .ToListAsync();
         return Ok(result);
     }

@@ -14,6 +14,12 @@ public class PracticalMaterial
     public bool IsPublic { get; set; }
     [Column("tries_count")]
     public int TriesCount { get; set; }
+    [Column("percent_for_five")]
+    public double PercentForFive { get; set; }
+    [Column("percent_for_four")]
+    public double PercentForFour { get; set; }
+    [Column("percent_for_three")]
+    public double PercentForThree { get; set; }
     
     public Module Module { get; set; }
     

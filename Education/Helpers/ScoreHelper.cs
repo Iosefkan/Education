@@ -9,6 +9,16 @@ namespace Education.Helpers;
 
 public static class ScoreHelper
 {
+    public static int GetGrade(double? score, double? maxScore, double five, double four, double three)
+    {
+        if (score is null || maxScore is null) return 0;
+        var percent = score / maxScore;
+        if (percent >= five / 100) return 5;
+        if (percent >= four / 100) return 4;
+        if (percent >= three / 100) return 3;
+        return 2;
+    }
+    
     public static double GetScore(QuestionTypeEnum type, string answer, string userAnswer)
     {
         var options = new JsonSerializerOptions
