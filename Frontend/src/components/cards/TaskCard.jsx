@@ -12,6 +12,7 @@ const TaskCard = ({
   canDelete = false,
   onDelete,
   isStudent = false,
+  grade
 }) => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -37,7 +38,7 @@ const TaskCard = ({
         <Card.Header className="h-100 d-flex justify-content-between align-items-center">
           <Card.Title className="mb-0 text-wrap">
             {title}
-            {isStudent && isAccepted && <span className="text-primary"> (выполнено)</span>}
+            {isStudent && isAccepted && <span className="text-primary"> (оценка {grade})</span>}
             {isStudent && !isAccepted && isUpdated && <span className="text-primary"> (обновлено)</span>}
           </Card.Title>
           {canDelete && (

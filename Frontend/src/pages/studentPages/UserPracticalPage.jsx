@@ -20,6 +20,7 @@ import {
   getTestStatus,
   startTest,
   getProtocols,
+  getGrade
 } from "../../services/student.service";
 import PaginatedData from "../../components/PaginatedData";
 import BaseQuestion from "../../components/questions/BaseQuestion";
@@ -75,8 +76,17 @@ const UserPracticalPage = () => {
   const [isQuestionsLoading, setIsQuestionsLoading] = useState(true);
   const [error, setError] = useState("");
   const [resultMessage, setResultMessage] = useState("");
-  const [activeKey, setActiveKey] = useState("tasks");
+  const [activeKey, setActiveKey] = useState("grade");
   const [tasks, setTasks] = useState([]);
+  const [totalGrade, setTotalGrade] = useState({ messages: ['загрузка...']});
+
+  useEffect(() => {
+    async function initTotalGrade() {
+      let resp = await getGrade(practId);
+      setTotalGrade(resp);
+    }
+    initTotalGrade();
+  }, [practId, setTotalGrade])
 
   useEffect(() => {
     async function InitQuestions() {
@@ -176,6 +186,9 @@ const UserPracticalPage = () => {
             <Col sm={2}>
               <Nav variant="pills" className="flex-column">
                 <Nav.Item>
+                  <Nav.Link eventKey="grade">Оценка</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
                   <Nav.Link eventKey="tasks">Задания</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -190,6 +203,25 @@ const UserPracticalPage = () => {
             </Col>
             <Col sm={10}>
               <Tab.Content>
+                <Tab.Pane eventKey="grade">
+                  <div className="mb-5">
+                    <h1>Практический материал "{practTitle}"</h1>
+                  </div>
+
+                  {!totalGrade.messages && (
+                    <h3>Итоговая оценка за тест и задания: {totalGrade.grade}</h3>
+                  )}
+                  {totalGrade.messages && (
+                    <>
+                      <h3>Для получения итоговой оценки:</h3>
+                      <ul>
+                        {totalGrade.messages.map((mes, ind) => (
+                          <li key={ind}><h5>{mes}</h5></li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </Tab.Pane>
                 <Tab.Pane eventKey="tasks">
                   <div className="mb-5">
                     <h1>Практический материал "{practTitle}"</h1>
@@ -207,6 +239,7 @@ const UserPracticalPage = () => {
                         isUpdated={task.isUpdated}
                         canDelete={false}
                         isStudent={true}
+                        grade={task.grade}
                       />
                     ))}
                   </div>

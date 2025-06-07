@@ -81,3 +81,10 @@ export const getProtocol = async (testResultId) => {
   );
   return response.data;
 };
+
+export const getGrade = async (practicalId) => {
+  const response = await axios.get(
+    `api/Student/GetPracticalGrade?practicalId=${practicalId}`
+  );
+  return response.data;
+};

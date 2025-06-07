@@ -20,15 +20,72 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUserProtocols(long practicalId)
     {
-        var result = await context.TestResults
+        var grouped = await context.TestResults
             .Include(tr => tr.User)
             .Include(tr => tr.PracticalMaterial)
             .AsNoTracking()
             .Where(tr => tr.PracticalMaterialId == practicalId && tr.IsCompleted)
-            .Select(tr => new { tr.Id, tr.UserId, Name = tr.User.GetFullName(), tr.Score, tr.MaxScore, tr.TryNumber, 
-                Grade = ScoreHelper.GetGrade(tr.Score, tr.MaxScore, tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour, tr.PracticalMaterial.PercentForThree) })
+            .GroupBy(tr => tr.UserId)
             .ToListAsync();
+
+
+        var result = new List<UserProtocol>();
+
+        foreach (var group in grouped)
+        {
+            var (grade, graded) = await GetUserGrade(group.Key, practicalId);
+            var userProtocol = new UserProtocol
+            {
+                UserId = group.Key,
+                Name = group.First().User.FirstName,
+                IsGraded = graded,
+                Grade = grade
+            };
+
+            foreach (var testResult in group)
+            {
+                var testProtocol = new TestProtocol
+                {
+                    Id = testResult.Id,
+                    Score = testResult.Score,
+                    MaxScore = testResult.MaxScore,
+                    TryNumber = testResult.TryNumber,
+                    PercentForFive = testResult.PracticalMaterial.PercentForFive,
+                    PercentForFour = testResult.PracticalMaterial.PercentForFour,
+                    PercentForThree = testResult.PracticalMaterial.PercentForThree,
+                    Grade = ScoreHelper.GetGrade(testResult.Score, testResult.MaxScore,
+                        testResult.PracticalMaterial.PercentForFive, testResult.PracticalMaterial.PercentForFour,
+                        testResult.PracticalMaterial.PercentForThree),
+                };
+                
+                userProtocol.TestProtocols.Add(testProtocol);
+            }
+            
+            result.Add(userProtocol);
+        }
+        
         return Ok(result);
+    }
+
+    class UserProtocol
+    {
+        public long UserId { get; set; }
+        public string Name { get; set; }
+        public bool IsGraded { get; set; }
+        public int Grade { get; set; }
+        public List<TestProtocol> TestProtocols { get; set; } = new();
+    }
+
+    class TestProtocol
+    {
+        public long Id { get; set; }
+        public double? Score { get; set; }
+        public double? MaxScore { get; set; }
+        public double TryNumber { get; set; }
+        public int Grade { get; set; }
+        public double PercentForFive { get; set; }
+        public double PercentForFour { get; set; }
+        public double PercentForThree { get; set; }
     }
     
     [HttpGet]
@@ -107,6 +164,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
                 cf.UserId, 
                 FullName = cf.User.GetFullName(), 
                 cf.IsAccepted,
+                cf.Grade,
                 IsUpdated = cf.Comments.OrderBy(c => c.Id).Last().IsGenerated,
                 Comments = cf.Comments.OrderBy(c => c.Id).Select(c => new { c.Id, c.IsGenerated, c.Text, c.Created }) })
             .ToListAsync();
@@ -129,6 +187,7 @@ public class TeacherController(ApplicationContext context) : ControllerBase
                 cf.UserId, 
                 FullName = cf.User.GetFullName(), 
                 cf.IsAccepted,
+                cf.Grade,
                 IsUpdated = cf.Comments.OrderBy(c => c.Id).Last().IsGenerated,
                 Comments = cf.Comments.OrderBy(c => c.Id).Select(c => new { c.Id, c.IsGenerated, c.Text, c.Created }) })
             .ToListAsync();
@@ -444,13 +503,12 @@ public class TeacherController(ApplicationContext context) : ControllerBase
     }
 
     [HttpPut]
-    public async Task<IActionResult> AcceptTaskFile(long taskFileId)
+    public async Task<IActionResult> AcceptTaskFile(long taskFileId, int grade)
     {
         var taskFile = await context.CaseFiles.FirstOrDefaultAsync(f => f.Id == taskFileId);
         if (taskFile is null) return BadRequest();
         taskFile.IsAccepted = true;
-        // TODO: доделать
-        //taskFile.Grade = grade;
+        taskFile.Grade = grade;
         await context.SaveChangesAsync();
         return Ok();
     }
@@ -647,5 +705,30 @@ public class TeacherController(ApplicationContext context) : ControllerBase
         context.TheoreticalMaterialFiles.Remove(theorFile);
         await context.SaveChangesAsync();
         return Ok();
+    }
+
+    private async Task<(int, bool)> GetUserGrade(long userId, long practicalId)
+    {
+        var casesPractical = await context.Cases.CountAsync(c => c.PracticalMaterialId == practicalId);
+        var casesPracticalUser = await context.CaseFiles.Include(cf => cf.Case).CountAsync(cf => cf.Case.PracticalMaterialId == practicalId && cf.UserId == userId && cf.IsAccepted);
+
+        List<string> messages = new();
+        if (casesPractical != casesPracticalUser) messages.Add("Выполните все задания");
+        
+        var isTestResult = await context.TestResults.AnyAsync(t => t.PracticalMaterialId == practicalId && t.UserId == userId);
+        if (!isTestResult) messages.Add("Пройдите тестирование");
+        if (messages.Count != 0) return (0, false);
+        
+        var testResults = await context.TestResults.Include(tr => tr.PracticalMaterial).Where(t => t.PracticalMaterialId == practicalId && t.UserId == userId).ToListAsync();
+        var bestTestScore = testResults.Select(tr => ScoreHelper.GetGrade(tr.Score, tr.MaxScore,
+            tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour,
+            tr.PracticalMaterial.PercentForThree)).Max();
+
+        var meanTaskScore = await context.CaseFiles.Include(cf => cf.Case)
+            .Where(cf => cf.Case.PracticalMaterialId == practicalId && cf.UserId == userId).Select(cf => cf.Grade)
+            .AverageAsync();
+
+        var grade = Math.Ceiling((bestTestScore + meanTaskScore) / 2);
+        return ((int)grade, true);
     }
 }

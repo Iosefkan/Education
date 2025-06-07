@@ -128,7 +128,7 @@ const BorderlessAccordion = () => {
           <h2>
             {taskTitle}
             {task?.isAccepted && (
-              <span className="text-primary"> (выполнено)</span>
+              <span className="text-primary"> (оценка {task.grade})</span>
             )}
             {!task?.isAccepted && task?.isUpdated && (
               <span className="text-primary"> (обновлено)</span>

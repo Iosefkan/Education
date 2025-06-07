@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button, Accordion } from "react-bootstrap";
 import CreateCommentModal from "./sidebars/CreateCommentModal";
 import MessageBubble from "./MessageBubble";
+import AcceptTask from "./sidebars/AcceptTask";
 
 const FileWithComments = ({ file, onAddComment, onAccept }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const handleCreateComment = (commentText) => {
     onAddComment(file.id, commentText);
@@ -29,7 +31,7 @@ const FileWithComments = ({ file, onAddComment, onAccept }) => {
             <div className="flex-grow-1">
               <div className="fw-bold">
                 Выполнивший студент: {file.fullName}
-                {file.isAccepted && <span className="me-2 text-primary"> (принято)</span>}
+                {file.isAccepted && <span className="me-2 text-primary"> (оценка {file.grade})</span>}
                 {!file.isAccepted && file.isUpdated && <span className="me-2 text-primary"> (обновлено)</span>}
               </div>
               <a href={file.path} target="_blank" rel="noopener noreferrer">
@@ -38,7 +40,7 @@ const FileWithComments = ({ file, onAddComment, onAccept }) => {
             </div>
             {!file.isAccepted && (
               <div className="d-flex justify-content-end gap-3 me-4">
-                <Button onClick={onAccept}>Принять работу</Button>
+                <Button onClick={() => setShowTaskModal(true)}>Принять работу</Button>
                 <Button onClick={() => setShowModal(true)}>
                   Добавить комментарий
                 </Button>
@@ -69,6 +71,12 @@ const FileWithComments = ({ file, onAddComment, onAccept }) => {
         show={showModal}
         onHide={() => setShowModal(false)}
         onCreate={handleCreateComment}
+      />
+
+      <AcceptTask
+        show={showTaskModal}
+        onHide={() => setShowTaskModal(false)}
+        onAccept={(grade) => onAccept(grade)}
       />
     </div>
   );

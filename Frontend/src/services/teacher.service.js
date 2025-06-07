@@ -282,8 +282,8 @@ export const setPublic = async (practicalId) => {
   await axios.put(`api/Teacher/MakePracticalPublic?practicalId=${practicalId}`);
 };
 
-export const setAccepted = async (taskFileId) => {
-  await axios.put(`api/Teacher/AcceptTaskFile?taskFileId=${taskFileId}`);
+export const setAccepted = async (taskFileId, grade) => {
+  await axios.put(`api/Teacher/AcceptTaskFile?taskFileId=${taskFileId}&grade=${grade}`);
 };
 
 export const getTasks = async (practicalId) => {

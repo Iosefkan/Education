@@ -38,6 +38,35 @@ public class StudentController(ApplicationContext context) : ControllerBase
             .ToListAsync();
         return Ok(result);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetPracticalGrade(long practicalId)
+    {
+        var login = User?.Identity?.Name;
+        if (login is null) return Unauthorized();
+        var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
+        var casesPractical = await context.Cases.CountAsync(c => c.PracticalMaterialId == practicalId);
+        var casesPracticalUser = await context.CaseFiles.Include(cf => cf.Case).CountAsync(cf => cf.Case.PracticalMaterialId == practicalId && cf.UserId == userId && cf.IsAccepted);
+
+        List<string> messages = new();
+        if (casesPractical != casesPracticalUser) messages.Add("Выполните все задания");
+        
+        var isTestResult = await context.TestResults.AnyAsync(t => t.PracticalMaterialId == practicalId && t.UserId == userId);
+        if (!isTestResult) messages.Add("Пройдите тестирование");
+        if (messages.Count != 0) return Ok(new { Messages = messages });
+        
+        var testResults = await context.TestResults.Include(tr => tr.PracticalMaterial).Where(t => t.PracticalMaterialId == practicalId && t.UserId == userId).ToListAsync();
+        var bestTestScore = testResults.Select(tr => ScoreHelper.GetGrade(tr.Score, tr.MaxScore,
+            tr.PracticalMaterial.PercentForFive, tr.PracticalMaterial.PercentForFour,
+            tr.PracticalMaterial.PercentForThree)).Max();
+
+        var meanTaskScore = await context.CaseFiles.Include(cf => cf.Case)
+            .Where(cf => cf.Case.PracticalMaterialId == practicalId && cf.UserId == userId).Select(cf => cf.Grade)
+            .AverageAsync();
+
+        var grade = Math.Ceiling((bestTestScore + meanTaskScore) / 2);
+        return Ok(new { Grade = grade });
+    }
     
     [HttpGet]
     public async Task<IActionResult> GetProtocols(long practicalId)
@@ -142,7 +171,7 @@ public class StudentController(ApplicationContext context) : ControllerBase
             var practicalMaterial = await context.PracticalMaterials.FirstAsync(pm => pm.Id == practicalId);
             var tryCount = await context.TestResults
                 .Where(tr => tr.PracticalMaterialId == practicalId && tr.UserId == userId).CountAsync();
-            if (practicalMaterial.TriesCount == tryCount + 1) return BadRequest();
+            if (practicalMaterial.TriesCount == tryCount) return BadRequest();
             
             testRes = new TestResult { UserId = userId, PracticalMaterialId = practicalId, IsCompleted = false, TryNumber = tryCount + 1 };
             await context.TestResults.AddAsync(testRes);
@@ -158,7 +187,7 @@ public class StudentController(ApplicationContext context) : ControllerBase
         var login = User?.Identity?.Name;
         if (login is null) return Unauthorized();
         var userId = await context.Users.Where(u => u.Login == login).Select(u => u.Id).FirstOrDefaultAsync();
-        var testResult = await context.TestResults.FirstOrDefaultAsync(tr => tr.PracticalMaterialId == request.PracticalId && tr.UserId == userId && !tr.IsCompleted);
+        var testResult = await context.TestResults.Include(tr => tr.PracticalMaterial).FirstOrDefaultAsync(tr => tr.PracticalMaterialId == request.PracticalId && tr.UserId == userId && !tr.IsCompleted);
         if (testResult is null) return BadRequest();
         
         testResult.IsCompleted = true;
@@ -190,7 +219,8 @@ public class StudentController(ApplicationContext context) : ControllerBase
         await context.SaveChangesAsync();
 
         
-        return Ok(new { testResult.Id, testResult.UserId, testResult.Score, testResult.MaxScore, testResult.TryNumber });
+        return Ok(new { testResult.Id, testResult.UserId, testResult.Score, testResult.MaxScore, testResult.TryNumber, 
+            Grade = ScoreHelper.GetGrade(testResult.Score, testResult.MaxScore, testResult.PracticalMaterial.PercentForFive, testResult.PracticalMaterial.PercentForFour, testResult.PracticalMaterial.PercentForThree) });
     }
 
     [HttpGet]
@@ -224,7 +254,8 @@ public class StudentController(ApplicationContext context) : ControllerBase
             Name = taskFile.Path.GetPublicFileName(), 
             Comments = comments, 
             taskFile.IsAccepted,
-            IsUpdated = isUpdated
+            IsUpdated = isUpdated,
+            taskFile.Grade
         });
     }
 

@@ -12,11 +12,10 @@ import {
   Row,
   Col,
   ListGroup,
-  Card,
   Form,
   FloatingLabel,
 } from "react-bootstrap";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   getPractAllQuestion,
@@ -39,6 +38,7 @@ import {
 } from "../../services/crumbsHelper";
 import "../../css/numInput.css";
 import MultiSelectSearch from "../../components/MultiSelectSearch";
+import UserProtocols from "../../components/UserProtocols";
 
 const MakePracticalPage = () => {
   const { state } = useLocation();
@@ -99,11 +99,11 @@ const MakePracticalPage = () => {
     );
   };
 
-  const handleAcceptTaskFile = async (taskFileId) => {
-    await setAccepted(taskFileId);
+  const handleAcceptTaskFile = async (taskFileId, grade) => {
+    await setAccepted(taskFileId, grade);
     setTaskFiles(
       taskFiles.map((file) =>
-        file.id === taskFileId ? { ...file, isAccepted: true } : file
+        file.id === taskFileId ? { ...file, isAccepted: true, grade: grade } : file
       )
     );
   };
@@ -120,7 +120,6 @@ const MakePracticalPage = () => {
   const [percentForFive, setPercentForFive] = useState(90);
   const [percentForFour, setPercentForFour] = useState(75);
   const [percentForThree, setPercentForThree] = useState(60);
-  const navigate = useNavigate();
 
   useEffect(() => {
     async function InitQuestions() {
@@ -185,17 +184,6 @@ const MakePracticalPage = () => {
     setTasks(tasks.filter((m) => m.id !== taskData.id));
   };
 
-  const handleSelectProtocol = (testResultId, username, tryNumber) => {
-    navigate("/testProtocol", {
-      state: {
-        testResultId,
-        username,
-        practName: practTitle,
-        tryNumber: tryNumber,
-      },
-    });
-  };
-
   const validateTriesCount = (e) => {
     e.target.value = Math.trunc(e.target.value);
     if (e.target.value < 1) {
@@ -206,7 +194,7 @@ const MakePracticalPage = () => {
     }
   };
 
-    const validatePercent = (e) => {
+  const validatePercent = (e) => {
     e.target.value = Number(e.target.value);
     if (e.target.value < 0) {
       e.target.value = 0;
@@ -275,7 +263,7 @@ const MakePracticalPage = () => {
                 {isPublic && (
                   <Nav.Item>
                     <Nav.Link eventKey="protocol">
-                      Протоколы тестирования
+                      Результаты студентов
                     </Nav.Link>
                   </Nav.Item>
                 )}
@@ -434,33 +422,11 @@ const MakePracticalPage = () => {
                     </div>
                     <ListGroup>
                       {userProtocols.map((prot) => (
-                        <Card
-                          key={prot.id}
-                          className="hover-overlay mb-3"
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            handleSelectProtocol(
-                              prot.id,
-                              prot.name,
-                              prot.tryNumber
-                            )
-                          }
-                        >
-                          <Card.Header className="mb-0">
-                            <Card.Title>
-                              Выполнивший студент: {prot.name}, попытка №
-                              {prot.tryNumber}
-                            </Card.Title>
-                          </Card.Header>
-                          <Card.Body>
-                            Оценка за тест:{" "}
-                            {prot.grade}
-                            <br />
-                            Выполнено: {prot.score.toFixed(2)}/
-                            {prot.maxScore.toFixed(2)},{" "}
-                            {((prot.score / prot.maxScore) * 100).toFixed(2)}%
-                          </Card.Body>
-                        </Card>
+                        <UserProtocols
+                          key={prot.userId}
+                          practTitle={practTitle}
+                          userProtocol={prot}
+                        />
                       ))}
                       {!userProtocols ||
                         (userProtocols.length === 0 && (
@@ -494,7 +460,7 @@ const MakePracticalPage = () => {
                         key={file.id}
                         file={file}
                         onAddComment={handleAddComment}
-                        onAccept={() => handleAcceptTaskFile(file.id)}
+                        onAccept={(grade) => handleAcceptTaskFile(file.id, grade)}
                       />
                     ))}
                   </ListGroup>
